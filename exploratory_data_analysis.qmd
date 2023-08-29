@@ -1,0 +1,79 @@
+---
+title: "Exploratory Data Analysis"
+author: "Brady Lamson"
+format: html
+editor: visual
+---
+
+```{r}
+library(dplyr)
+library(skimr)
+library(readxl)
+library(glue)
+```
+
+```{r}
+data_path <- "data/pompeii_data_aug_28_2023.xlsx"
+sheets <- readxl::excel_sheets(data_path)
+print(sheets)
+
+for (sheet in sheets) {
+    data <- readxl::read_excel(data_path, sheet = sheet)
+    print(glue::glue(
+        "
+        ---
+        Sheet name: {sheet}
+        Column count: {ncol(data)}
+        Row count: {nrow(data)}
+        "
+    ))
+    rm(data)
+}
+
+# data <- readxl::read_excel("data/pompeii_data_aug_28_2023.xlsx", )
+# data
+```
+
+We'll be first exploring the "all peristyles" sheet as it contains a ridiculous number of columns. 
+
+```{r}
+df <- read_excel(data_path, sheet = "all peristyles")
+```
+
+Below is the set of column names for this dataset.
+
+```{r}
+colnames(df)
+```
+
+That's a LOT of columns. To help cut down on time for columns we definitely can't use, I'm going to remove any that have 50% or more rows with missing values.
+
+```{r}
+na_count <- 
+    # Get the sum of NAs for each column
+    colSums(is.na(df)) %>%
+    # Do some converting of output to a tibble for easier processing
+    as.data.frame() %>%
+    dplyr::as_tibble(rownames = "col_name") %>%
+    dplyr::rename(., count = .) %>%
+    # Calculate the proportion of rows are NAs.
+    dplyr::mutate(
+        completeness = 1 - (count / nrow(df))
+    ) %>%
+    # Arrange in descending order
+    dplyr::arrange(
+        dplyr::desc(completeness)
+    )
+    
+na_count
+```
+
+```{r}
+hist(na_count$completeness)
+```
+
+
+```{r}
+skimr::skim(df)
+```
+
