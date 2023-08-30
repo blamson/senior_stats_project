@@ -10,6 +10,7 @@ library(dplyr)
 library(skimr)
 library(readxl)
 library(glue)
+library(ggplot2)
 ```
 
 ```{r}
@@ -29,12 +30,9 @@ for (sheet in sheets) {
     ))
     rm(data)
 }
-
-# data <- readxl::read_excel("data/pompeii_data_aug_28_2023.xlsx", )
-# data
 ```
 
-We'll be first exploring the "all peristyles" sheet as it contains a ridiculous number of columns. 
+We'll be first exploring the "all peristyles" sheet as it contains a ridiculous number of columns.
 
 ```{r}
 df <- read_excel(data_path, sheet = "all peristyles")
@@ -46,34 +44,118 @@ Below is the set of column names for this dataset.
 colnames(df)
 ```
 
-That's a LOT of columns. To help cut down on time for columns we definitely can't use, I'm going to remove any that have 50% or more rows with missing values.
+That's a LOT of columns. To help cut down on time for columns we definitely can't use, let's first look at how many have missing values and how many there are. First we can skim the dataset.
 
 ```{r}
-na_count <- 
-    # Get the sum of NAs for each column
-    colSums(is.na(df)) %>%
-    # Do some converting of output to a tibble for easier processing
-    as.data.frame() %>%
-    dplyr::as_tibble(rownames = "col_name") %>%
-    dplyr::rename(., count = .) %>%
-    # Calculate the proportion of rows are NAs.
-    dplyr::mutate(
-        completeness = 1 - (count / nrow(df))
-    ) %>%
-    # Arrange in descending order
-    dplyr::arrange(
-        dplyr::desc(completeness)
-    )
-    
-na_count
+overview <- skim(df)
+overview
+```
+
+Poking through this output shows a huge variation in missing values. Let's look a bit closer.
+
+```{r}
+na_count_skim <- 
+    overview %>%
+    select(c("skim_variable", "complete_rate")) %>%
+    arrange(desc(complete_rate))
+
+na_count_skim
 ```
 
 ```{r}
-hist(na_count$completeness)
+na_count_skim %>%
+    ggplot(
+        aes(
+            x = complete_rate * 100, 
+            y=after_stat(count)/sum(after_stat(count)) * 100
+        )
+    ) +
+    geom_histogram(binwidth=10, color="black", fill="grey") +
+    scale_x_continuous(breaks = seq(from=0, to=100, by=20)) +
+    ggtitle("Distribution of completeness in 'All Peristyles' sheet") +
+    labs(x="Completeness (%)", y="Relative Frequency (%)") +
+    theme_minimal()
+```
+
+What we can see here is the vast majority of the data set has a lot of NAs. Only a touch over 20% is at least 80% complete. Thankfully that still leaves us with a ton of columns to work with, so we'll use that as our starting threshold.
+
+```{r}
+threshold <- 0.8
+# Pull gives us a vector of the column names that meet our threshold
+columns_to_keep <- 
+    na_count %>%
+    filter(completeness > threshold) %>%
+    pull(col_name)
+
+print(columns_to_keep)
+
+df <- 
+    df %>%
+    select(columns_to_keep)
+
+df
+```
+
+# Column Notes
+
+```{r}
+skim(df)
+```
+
+## General notes
+
+We shouldn't take these skim results entirely at face value. In particular, the `n_unique` value here differentiates between 'yes' and 'yes with notes'. Many of these columns are actually boolean when you look at them and will need to be cleaned up. As well, there are some numerical columns that got read in as categorical ones due to extra text in the cell. I believe the only ones here are `property_size`, `columns`, `pillars`. These will need to be handled with care depending on if we use them.
+
+
+```{r}
+columns_to_fix <- c("property_size", "columns", "pillars")
+
+#df %>% mutate_at(columns_to_fix, as.numeric)
+```
+
+
+I'm going to remove all white space in column names with an underscore. This just makes any code I need to write a bit less obnoxious. I'm also going to replace the "%" sign with the actual word percent as that character can sometimes overlap with other things in code and break stuff.
+
+```{r}
+colnames(df) <- gsub(" ", "_", colnames(df))
+colnames(df) <- gsub("%", "percent", colnames(df))
+```
+
+## Column specifics
+
+**number** appears to be an id column. What's strange about this is it only has 207 unique values in 220 rows. Will need to look into this.
+
+**name** Seems to represent the homes owner or its purpose. Guessing for rows labeled simply "house" have an unknown owner?
+
+**peristyle_type** is confusing. It's only unique values are "tru" and "truncated". I figure both of those would correspond to the same thing?
+
+```{r}
+df$`peristyle_type` %>% unique()
+```
+
+**tablinum**. Represents [this, probably](https://en.wikipedia.org/wiki/Tablinum). The column itself a boolean variable with some notes occasionally tacked on. If we were to use this column we'd likely need to abandon anything after the "yes".
+
+**pluteus** is in a similar situation. Semi-boolean with occasional extra notes. Overall categories seem to be (yes, no, partial)
+
+**pillars** Could be treated as a numeric column depending on how we want to use it. Will need to treat with care. 
+
+```{r}
+df$pillars %>% unique()
+```
+
+**columns** Could be treated as a numeric column.
+
+```{r}
+df$columns %>% unique()
+```
+
+**property_size**. Needs to have the "?" symbol replaced with a missing value and changed to numeric. Also need to get the units of this column. Square feet?
+
+```{r}
+df$property_size %>% unique()
 ```
 
 
 ```{r}
-skimr::skim(df)
+df
 ```
-
