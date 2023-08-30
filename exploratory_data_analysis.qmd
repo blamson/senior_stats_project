@@ -14,7 +14,7 @@ library(ggplot2)
 ```
 
 ```{r}
-data_path <- "data/pompeii_data_aug_28_2023.xlsx"
+data_path <- "data/Pompeii data 2023 for stats .xlsx"
 sheets <- readxl::excel_sheets(data_path)
 print(sheets)
 
@@ -106,13 +106,11 @@ skim(df)
 
 We shouldn't take these skim results entirely at face value. In particular, the `n_unique` value here differentiates between 'yes' and 'yes with notes'. Many of these columns are actually boolean when you look at them and will need to be cleaned up. As well, there are some numerical columns that got read in as categorical ones due to extra text in the cell. I believe the only ones here are `property_size`, `columns`, `pillars`. These will need to be handled with care depending on if we use them.
 
-
 ```{r}
 columns_to_fix <- c("property_size", "columns", "pillars")
 
 #df %>% mutate_at(columns_to_fix, as.numeric)
 ```
-
 
 I'm going to remove all white space in column names with an underscore. This just makes any code I need to write a bit less obnoxious. I'm also going to replace the "%" sign with the actual word percent as that character can sometimes overlap with other things in code and break stuff.
 
@@ -137,7 +135,7 @@ df$`peristyle_type` %>% unique()
 
 **pluteus** is in a similar situation. Semi-boolean with occasional extra notes. Overall categories seem to be (yes, no, partial)
 
-**pillars** Could be treated as a numeric column depending on how we want to use it. Will need to treat with care. 
+**pillars** Could be treated as a numeric column depending on how we want to use it. Will need to treat with care.
 
 ```{r}
 df$pillars %>% unique()
@@ -154,7 +152,6 @@ df$columns %>% unique()
 ```{r}
 df$property_size %>% unique()
 ```
-
 
 ```{r}
 df
