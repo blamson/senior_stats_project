@@ -54,7 +54,7 @@ overview
 Poking through this output shows a huge variation in missing values. Let's look a bit closer.
 
 ```{r}
-na_count_skim <- 
+na_count <- 
     overview %>%
     select(c("skim_variable", "complete_rate")) %>%
     arrange(desc(complete_rate))
@@ -63,7 +63,7 @@ na_count_skim
 ```
 
 ```{r}
-na_count_skim %>%
+na_count %>%
     ggplot(
         aes(
             x = complete_rate * 100, 
@@ -84,8 +84,8 @@ threshold <- 0.8
 # Pull gives us a vector of the column names that meet our threshold
 columns_to_keep <- 
     na_count %>%
-    filter(completeness > threshold) %>%
-    pull(col_name)
+    filter(complete_rate > threshold) %>%
+    pull(skim_variable)
 
 print(columns_to_keep)
 
@@ -125,23 +125,47 @@ colnames(df) <- gsub("%", "percent", colnames(df))
 
 **name** Seems to represent the homes owner or its purpose. Guessing for rows labeled simply "house" have an unknown owner?
 
+NOTE: Can probably combine both number and name to create a unique identifier column.
+
 **peristyle_type** is confusing. It's only unique values are "tru" and "truncated". I figure both of those would correspond to the same thing?
 
 ```{r}
 df$`peristyle_type` %>% unique()
 ```
 
-**tablinum**. Represents [this, probably](https://en.wikipedia.org/wiki/Tablinum). The column itself a boolean variable with some notes occasionally tacked on. If we were to use this column we'd likely need to abandon anything after the "yes".
+NOTE: Based on the dissertation "tru" seems to stand for "true". Confirm this and then change the text for future ease of understanding.
 
-**pluteus** is in a similar situation. Semi-boolean with occasional extra notes. Overall categories seem to be (yes, no, partial)
+**tablinum (MAYBE)**. Represents [this, probably](https://en.wikipedia.org/wiki/Tablinum). The column itself a boolean variable with some notes occasionally tacked on. If we were to use this column we'd likely need to abandon anything after the "yes".
 
-**pillars** Could be treated as a numeric column depending on how we want to use it. Will need to treat with care.
+```{r}
+df$tablinum %>% unique()
+```
+
+NOTE: Check frequency of "?" in the dataset as those are definitely missing values.
+
+NOTE: Probably just keep the yes/no and maybe the wide/not-wide depending on frequency.
+
+```{r}
+df %>% filter(tablinum == "NA")
+```
+
+**pluteus (MAYBE)** is in a similar situation. Semi-boolean with occasional extra notes. Overall categories seem to be (yes, no, partial)
+
+```{r}
+df$pluteus %>% unique()
+```
+
+```{r}
+df %>% filter(pluteus == "?")
+```
+
+**pillars (MAYBE)** Could be treated as a numeric column depending on how we want to use it. Will need to treat with care.
 
 ```{r}
 df$pillars %>% unique()
 ```
 
-**columns** Could be treated as a numeric column.
+**columns** Could be treated as a numeric column. Possibly not useful if it corresponds to the number of columns currently standing as we're more interested in how many columns there USED to be.
 
 ```{r}
 df$columns %>% unique()
@@ -153,6 +177,28 @@ df$columns %>% unique()
 df$property_size %>% unique()
 ```
 
+**Peristyle size**, **Property size** and **% of property**: All of these are highly correlated and % of property cant exist (most of the time) without property size. Probably just stick with peristyle size if we use it.
+
+NOTE: "House of Painters at Work" is missing these values but there is a lot of known information about this location.
+
 ```{r}
 df
 ```
+
+## List of Potential Includes
+
+## Ready
+
+Pillar size
+
+## Maybe
+
+pluteus
+
+tablinum
+
+## Reundant
+
+Property size
+
+Percentage of property
