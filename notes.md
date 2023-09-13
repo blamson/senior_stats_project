@@ -16,4 +16,18 @@ Next steps:
 Later on:
     - Are there columns where missing values tend to be grouped for a row?
     - In other words, are missing values correlated at all between sparse factors. 
-    - It's possible a row missing a column may be indicitive of missing values in other columns. 
+    - It's possible a row missing a column may be indicitive of missing values in other columns.
+
+---
+
+## Sep 7th
+
+ Column Diameter: is blank the same as NA?
+
+Check whether the atrium is adjacent to a porticod walkway
+### Random notes
+Correlation between column height and column style?
+NA IN the spreadsheet itself tends to be a more powerful indicator than a blank cell. 
+
+### Next Steps
+Get a top 20 list of variable candidates

@@ -173,7 +173,8 @@ Could be treated as a numeric variable. Possibly not useful if it corresponds to
 df_complete_vars$columns %>% unique()
 ```
 
-### property_size 
+### property_size
+
 Needs to have the "?" symbol replaced with a missing value and changed to numeric. Also need to get the units of this column. Square feet?
 
 ```{r}
