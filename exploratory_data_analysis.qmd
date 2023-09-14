@@ -16,12 +16,14 @@ source('helpers.R')
 ```
 
 ```{r}
-data_path <- "data/Pompeii data 2023 for stats .xlsx"
-sheets <- readxl::excel_sheets(data_path)
+data_date <- "data/sep_13"
+data_path <- "Pompeii data 2023 for stats .xlsx"
+full_path <- paste0(data_date, "/", data_path) 
+sheets <- readxl::excel_sheets(full_path)
 print(sheets)
 
 for (sheet in sheets) {
-    data <- readxl::read_excel(data_path, sheet = sheet)
+    data <- readxl::read_excel(full_path, sheet = sheet)
     print(glue::glue(
         "
         ---
@@ -37,7 +39,7 @@ for (sheet in sheets) {
 We'll be first exploring the "all peristyles" sheet as it contains a ridiculous number of columns.
 
 ```{r}
-df <- read_excel(data_path, sheet = "all peristyles")
+df <- read_excel(full_path, sheet = "all peristyles")
 ```
 
 Below is the set of column names for this dataset.
@@ -69,11 +71,15 @@ df <- tidyr::unite(df, col='id', c('number', 'name'), sep='_')
 
 Poking through this output shows a huge variation in missing values. Let's look a bit closer.
 
+# Completeness
+
 ```{r}
 na_count <- completeness_by_var(df)
 
 na_count
 ```
+
+## Completeness Histogram
 
 ```{r}
 na_count %>%
@@ -92,10 +98,36 @@ na_count %>%
 
 What we can see here is the vast majority of the data set has a lot of NAs. Only a touch over 10% is at least 80% complete. Thankfully that still leaves us with a ton of columns to work with, so we'll use that as our starting threshold.
 
+## Complete Candidates
+
 ```{r}
 df_complete_vars <- filter_by_completeness(df, threshold = .8)
 df_complete_vars
+
+dont_care <- c(
+    "table_position...63", "decoration", "garden_#__(PPM)", "main_shaft_decoration", "order",
+    "table_(Moss/_Cohon)"
+)
+# I take the intersection of this and the colnames of df_complete_vars as that can change based on threshold
+dont_care <- intersect(colnames(df_complete_vars), dont_care)
+
+df_complete_vars %>%
+    dplyr::select(., -dplyr::all_of(dont_care)) %>%
+    colnames()
 ```
+
+
+### Completeness but "NA" counts as NA
+
+Worth looking into as some columns have string "NA"s. 
+
+```{r}
+df %>%
+    dplyr::mutate_if(is.character, ~dplyr::na_if(., "NA")) %>%
+    filter_by_completeness(.8)
+```
+
+
 
 # Column Notes
 
@@ -221,8 +253,8 @@ glue::glue("When combined, the portico data is {round(prop * 100, 2)}% complete.
 Also note that there appear to be duplicated columns on read in. `portico_sides` for instance has two versions, 130 and 33. I would guess these correspond to their column index from the original sheet.
 
 ```{r}
-df %>% 
-    dplyr::select(c(portico_sides...33, portico_sides...130))
+# df %>% 
+#     dplyr::select(c(portico_sides...33, portico_sides...130))
 ```
 
 # Evaluating possible types of missing values
@@ -252,3 +284,18 @@ I'm particularly curious about the VERY incomplete variables, so let's take a lo
 df_incomplete_vars <- filter_by_completeness(df, threshold = .05, operator = "<")
 df_incomplete_vars
 ```
+
+# Checking 'duplicate' columns
+
+Columns with identical names read into R have a new notation involving 3 dots. These columns are sometimes identical but not always, which is the point of this search.
+
+```{r}
+dots <- df %>% select(contains("..."))
+dots %>% colnames() %>% sort()
+```
+
+```{r}
+dots[, order(names(dots))]
+```
+
+# 
