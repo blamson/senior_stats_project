@@ -1,7 +1,7 @@
 ---
 title: "Exploratory Data Analysis"
 author: "Brady Lamson"
-format: html
+format: pdf
 editor: visual
 ---
 
@@ -111,23 +111,81 @@ dont_care <- c(
 # I take the intersection of this and the colnames of df_complete_vars as that can change based on threshold
 dont_care <- intersect(colnames(df_complete_vars), dont_care)
 
-df_complete_vars %>%
+candidates <- 
+    df_complete_vars %>%
     dplyr::select(., -dplyr::all_of(dont_care)) %>%
     colnames()
+```
+
+```{r}
+candidates
+```
+
+```{r}
+# barplot(table(df$peristyle_size))
+hist(log(df$peristyle_size), 30)
+square <- df$peristyle_size^5
+hist(log(square), 30)
+```
+
+```{r}
+# barplot(table(df$columns))
+# temp <- df %>%
+#     dplyr::mutate(columns = as.numeric(gsub("[^0-9.]", "", columns))) %>%
+#     dplyr::filter(columns < 11000)
+# 
+# hist(temp$columns)
+hist(as.numeric(df$columns) %>% log(), 20)
+```
+```{r}
+df$total_frstdng_supports %>% log() %>% hist(15)
+```
+
+```{r}
+mod <- lm(as.numeric(df$columns) ~ df$total_frstdng_supports)
+mod %>% summary()
+```
+
+NOTE: Because columns and total_drstdng_supports are very highly correlated, we can ignore the nightmare that is the columns variable.
+
+```{r}
+barplot(table(df$`visible_from_atrium?`))
+```
+
+```{r}
+df$atria %>% table()
+```
+
+```{r}
+df$column_material %>% table() %>% barplot()
+```
+
+```{r}
+df$`visible_from_entrance?` %>% table() %>% barplot()
+```
+
+```{r}
+df$walkways %>% table() %>% barplot()
+```
+
+```{r}
+df$`large_room_on_axis?` %>% table() %>% barplot()
+```
+
+```{r}
+df$pillars %>% table() %>% barplot()
 ```
 
 
 ### Completeness but "NA" counts as NA
 
-Worth looking into as some columns have string "NA"s. 
+Worth looking into as some columns have string "NA"s.
 
 ```{r}
 df %>%
     dplyr::mutate_if(is.character, ~dplyr::na_if(., "NA")) %>%
     filter_by_completeness(.8)
 ```
-
-
 
 # Column Notes
 
@@ -172,6 +230,11 @@ df_complete_vars$tablinum %>% unique()
 NOTE: Check frequency of "?" in the dataset as those are definitely missing values.
 
 NOTE: Probably just keep the yes/no and maybe the wide/not-wide depending on frequency.
+
+```{r}
+barplot(table(df$tablinum))
+```
+
 
 ```{r}
 df_complete_vars %>% filter(tablinum == "NA")

@@ -39,3 +39,12 @@ Later on: - Are there variables where missing values tend to be grouped for a ro
 -   Property Size
 -   Percentage of Property
 
+# September 14
+
+Clean up and dig through the various binary variables we've looked at. If possible, make a correlation matrix of these. 
+
+Turn 'atria' into a binary variable called "corinthian or not". What it says on the tin. If corinthian is in the value, 1. If not, 0. 
+
+Also, create a new dataframe specifically for new transformed variables. Just to help deal with the cruft.
+
+AND, make a new excel sheet specifically for using on the home pc. Delete all the garbage im uninterested in visually. 
