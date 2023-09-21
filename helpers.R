@@ -1,6 +1,7 @@
 library(dplyr)
 library(skimr)
 library(tibble)
+library(tidyr)
 
 
 fix_variable_names <- function(dataframe) {
@@ -9,6 +10,19 @@ fix_variable_names <- function(dataframe) {
     
     colnames(dataframe) <- gsub(" ", "_", colnames(dataframe))
     colnames(dataframe) <- gsub("%", "percent", colnames(dataframe))
+    
+    return(dataframe)
+}
+
+
+create_unique_id <- function(dataframe) {
+    dataframe <- 
+        unite(df, col='id', c('number', 'name'), sep='_') %>%
+        group_by(id) %>%
+        mutate(row_number = row_number()) %>%
+        ungroup() %>%
+        mutate(id = ifelse(row_number > 1, paste0(id, "_", row_number), id)) %>%
+        select(-row_number)
     
     return(dataframe)
 }

@@ -1,11 +1,12 @@
 ---
 title: "Exploratory Data Analysis"
 author: "Brady Lamson"
-format: pdf
+format: html
 editor: visual
 ---
 
 ```{r}
+library(stringr)
 library(dplyr)
 library(skimr)
 library(readxl)
@@ -14,6 +15,10 @@ library(ggplot2)
 library(tidyr)
 source('helpers.R')
 ```
+
+# Reading Data and preprocessing
+
+## Reading
 
 ```{r}
 data_date <- "data/sep_13"
@@ -50,8 +55,11 @@ colnames(df)
 
 That's a LOT of columns. To help cut down on time for columns we definitely can't use, let's first look at how many have missing values and how many there are. First let's clean up the column names to make them easier to work with. Things like spaces and the percent sign can make certain operations difficult.
 
+## Preprocessing
+
 ```{r}
 df <- fix_variable_names(df)
+df <- create_unique_id(df)
 ```
 
 ```{r}
@@ -63,10 +71,12 @@ overview <- skim(df)
 overview
 ```
 
-Number and name will be combined here to generate a unique id per observation.
+We'll also setup a cleaned up dataframe as we go full of new columns we create.
+
+## Create "clean" dataframe
 
 ```{r}
-df <- tidyr::unite(df, col='id', c('number', 'name'), sep='_')
+cleaned_df <- df %>% dplyr::select(id) %>% tibble::tibble()
 ```
 
 Poking through this output shows a huge variation in missing values. Let's look a bit closer.
@@ -121,6 +131,8 @@ candidates <-
 candidates
 ```
 
+### Examining candidates with tables and plots
+
 ```{r}
 # barplot(table(df$peristyle_size))
 hist(log(df$peristyle_size), 30)
@@ -150,10 +162,6 @@ NOTE: Because columns and total_drstdng_supports are very highly correlated, we 
 
 ```{r}
 barplot(table(df$`visible_from_atrium?`))
-```
-
-```{r}
-df$atria %>% table()
 ```
 
 ```{r}
@@ -319,6 +327,84 @@ Also note that there appear to be duplicated columns on read in. `portico_sides`
 # df %>% 
 #     dplyr::select(c(portico_sides...33, portico_sides...130))
 ```
+
+# Exploring Binary Variables
+
+## Changing Atria
+
+```{r}
+df$atria %>% table()
+```
+
+```{r}
+df <- 
+    df %>% 
+    dplyr::mutate(
+        corinthian = ifelse(
+            stringr::str_detect(
+                string=atria, 
+                pattern=stringr::regex("corinthian", ignore_case = TRUE)), 
+            1, 0
+        )
+    ) 
+
+df %>% select(c("atria", "corinthian"))
+```
+
+## Creating binary column list
+
+Potential binary columns include "corinthian", "peristyle type", "tablinum", "pluteus", "has_brick?"
+
+## Modify Tablinum, Peristyle Type
+
+### Tablinum
+
+NOTE: Mention changing of string "NA" to NA. 
+
+```{r}
+df <- 
+    df %>%
+    mutate(
+        has_tablinum = case_when(
+            tablinum == "no" ~ 0,
+            tablinum %in% c("NA", "?") ~ NA,
+            TRUE ~ 1
+        )
+    ) 
+
+df %>% select(c(tablinum, has_tablinum))
+```
+
+### Peristyle Type
+
+```{r}
+df <- 
+    df %>%
+    mutate(
+        truncated_peristyle = case_when(
+            peristyle_type == "truncated" ~ 1,
+            TRUE ~ 0
+        )
+    ) 
+
+df %>% select(c(peristyle_type, truncated_peristyle))
+```
+
+## Combine them into cleaned_df
+
+```{r}
+cleaned_df <- dplyr::left_join(cleaned_df, df[, c("id", "corinthian", "truncated_peristyle", "has_tablinum")], by="id")
+cleaned_df
+```
+
+## Binary Correlation Matrix
+
+Pairwise complete obs is imperfect as it only computes correlation for rows where both values are present, but we get no information otherwise. 
+
+```{r}
+cleaned_df %>% select(-id) %>% cor(use='pairwise.complete.obs')
+```
+
 
 # Evaluating possible types of missing values
 

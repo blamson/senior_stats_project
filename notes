@@ -41,10 +41,26 @@ Later on: - Are there variables where missing values tend to be grouped for a ro
 
 # September 14
 
-Clean up and dig through the various binary variables we've looked at. If possible, make a correlation matrix of these. 
+Clean up and dig through the various binary variables we've looked at.
+If possible, make a correlation matrix of these.
 
-Turn 'atria' into a binary variable called "corinthian or not". What it says on the tin. If corinthian is in the value, 1. If not, 0. 
+Turn 'atria' into a binary variable called "corinthian or not".
+What it says on the tin.
+If corinthian is in the value, 1.
+If not, 0.
 
-Also, create a new dataframe specifically for new transformed variables. Just to help deal with the cruft.
+Also, create a new dataframe specifically for new transformed variables.
+Just to help deal with the cruft.
 
-AND, make a new excel sheet specifically for using on the home pc. Delete all the garbage im uninterested in visually. 
+AND, make a new excel sheet specifically for using on the home pc.
+Delete all the garbage im uninterested in visually.
+
+# September 20
+
+Made the ID column actually unique (there was a 1 "duplicate")
+
+Got a new dataframe using new columns.
+
+Converted peristyle type, tablinum, and atria into binary columns
+
+Created a correlation matrix but it is imperfect due to missing values
