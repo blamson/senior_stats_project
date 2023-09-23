@@ -21,8 +21,8 @@ source('helpers.R')
 ## Reading
 
 ```{r}
-data_date <- "data/sep_13"
-data_path <- "Pompeii data 2023 for stats .xlsx"
+data_date <- "data/sep_10"
+data_path <- "Pompeii data 2023 for stats.xlsx"
 full_path <- paste0(data_date, "/", data_path) 
 sheets <- readxl::excel_sheets(full_path)
 print(sheets)
@@ -351,6 +351,12 @@ df <-
 df %>% select(c("atria", "corinthian"))
 ```
 
+```{r}
+df %>% filter(corinthian == 1)
+```
+
+Interesting note that 3 of the 4 results here are from different gardens of the same complex. 
+
 ## Creating binary column list
 
 Potential binary columns include "corinthian", "peristyle type", "tablinum", "pluteus", "has_brick?"
@@ -375,6 +381,16 @@ df <-
 df %>% select(c(tablinum, has_tablinum))
 ```
 
+```{r}
+hist(df$has_tablinum)
+```
+
+```{r}
+missing_has_tab <- df %>% filter(is.na(has_tablinum)) %>% nrow()
+glue::glue("has_tablinum has {missing_has_tab} missing values")
+```
+
+
 ### Peristyle Type
 
 ```{r}
@@ -389,6 +405,11 @@ df <-
 
 df %>% select(c(peristyle_type, truncated_peristyle))
 ```
+
+```{r}
+df$truncated_peristyle %>% hist()
+```
+
 
 ## Combine them into cleaned_df
 
