@@ -1,0 +1,230 @@
+---
+title: "directional_eda"
+author: "Brady Lamson"
+format: html
+---
+
+# Imports
+
+```{r}
+library(stringr)
+library(dplyr)
+library(skimr)
+library(readxl)
+library(glue)
+library(ggplot2)
+library(tidyr)
+library(readr)
+source('helpers.R')
+```
+
+
+# Data loading and preprocessing
+
+```{r}
+data_date <- "data/sep_13"
+data_path <- "Pompeii data 2023 for stats .xlsx"
+full_path <- paste0(data_date, "/", data_path) 
+df <- readxl::read_excel(full_path, sheet="all peristyles")
+df <- fix_variable_names(df)
+df <- create_unique_id(df)
+
+df
+```
+
+# Directional Columns
+
+## All walkway columns
+
+```{r}
+df %>% select(contains("walkway"))
+```
+
+### walkway_width_max
+
+```{r}
+df %>% select(contains("walkway_width_max"))
+```
+
+The earlier instance of this column appears to be the same column but with two key differences.
+
+1. Has more rows of data
+2. Does not have coordinate info such as north, south east and west
+
+### Walkway max and min
+
+So, if we use the more complete numeric column we can also look at min width.
+
+```{r}
+width <- df %>% select(c(walkway_width_min, walkway_width_max...35)) 
+
+width
+width %>% completeness_by_var()
+```
+
+Neither of these variables is very complete though they always exist with eachother and appear to be on the same scale.
+Since they're always together, we can just remove the NAs for easier visualization.
+
+```{r}
+width <- width %>%
+    na.omit()
+
+width
+```
+
+
+```{r}
+ggplot() +
+    geom_boxplot(aes(x="Minimum", y=width$walkway_width_min)) +
+    geom_boxplot(aes(x="Maximum", y=width$walkway_width_max...35)) +
+    ggtitle("Comparison of Maximum and Minimum Walkway Widths") +
+    labs(x="", y="Width")
+```
+
+```{r}
+hist(width$walkway_width_min)
+hist(width$walkway_width_max...35)
+
+# TODO: Use gather on width to make this less nonsense?
+
+bin_count=15
+
+ggplot() +
+    geom_histogram(aes(x=width$walkway_width_min), alpha=0.6, fill="blue", bins=bin_count) +
+    geom_histogram(aes(x=width$walkway_width_max...35), alpha=0.6, fill="red", bins=bin_count) +
+    labs(x="Width")
+```
+
+```{r}
+bin_count=15
+
+width <-
+    width %>%
+    mutate(ratio = walkway_width_max...35 / walkway_width_min)
+
+labels = labs(title="Histogram of Maximum vs. Minimum Walkway Width", x="Ratio (Max:Min)", y="Frequency")
+
+ggplot(width, aes(x=ratio)) +
+    geom_histogram(bins=bin_count, fill="#F8766D", color="black", alpha=1, boundary=0) +
+    scale_x_continuous(breaks = 1:8, limits=c(1,8)) +
+    labels
+
+
+ggplot(width, aes(x=ratio)) +
+    geom_histogram(bins=bin_count, fill="#F8766D", color="black", alpha=1, boundary=0) +
+    scale_x_continuous(breaks = seq(1,3,.25), limits = c(1,3)) +
+    scale_y_discrete(limits=seq(1,15,2)) +
+    labels
+```
+
+```{r}
+width %>% filter(ratio == max(width$ratio))
+```
+
+
+### Walkway sides
+
+```{r}
+sides <- 
+    df %>%
+    select(c(id, walkway_N, walkway_S, walkway_E, walkway_W)) %>%
+    # Remove all rows where all 4 columns are NA
+    filter(rowSums(!is.na(.)) > 1) %>%
+    # Replace all remaining NAs with 0
+    replace(is.na(.), 0) %>%
+    mutate(directions = rowSums(across(where(is.numeric))))
+
+sides
+```
+
+```{r}
+ggplot(sides) +
+    geom_bar(
+        aes(
+            x=directions, 
+            y=after_stat(count)/sum(after_stat(count)) * 100
+        ), fill="#619CFF", color="blue"
+    ) +
+    labs(
+        title="Frequency of how many directions walkways face per peristyle",
+        x="# Directions Faced", 
+        y="Relative Frequency (%)"
+    )
+```
+
+### Portico Sides
+
+```{r}
+portico <- 
+    df %>%
+    select(c(id, portico_N, portico_S, portico_E, portico_W)) %>%
+    # Remove all rows where all 4 columns are NA
+    filter(rowSums(!is.na(.)) > 1) %>%
+    # Replace all remaining NAs with 0
+    replace(is.na(.), 0) %>%
+    mutate(directions = rowSums(across(where(is.numeric))))
+
+portico
+```
+
+```{r}
+ggplot(portico) +
+    geom_bar(
+        aes(
+            x=directions, 
+            y=after_stat(count)/sum(after_stat(count)) * 100
+        ), fill="#619CFF", color="blue"
+    ) +
+    labs(
+        title="Frequency of how many directions porticos face per peristyle",
+        x="# Directions Faced", 
+        y="Relative Frequency (%)"
+    )
+```
+
+
+### Join walkway and portico
+
+```{r}
+walkway_and_portico <- 
+    left_join(sides, portico, by = join_by(id == id)) %>%
+    rename(
+        walkway_directions = directions.x,
+        portico_directions = directions.y
+    )
+
+walkway_and_portico
+```
+
+```{r}
+walkway_and_portico %>% 
+    pivot_longer(c(walkway_directions, portico_directions), values_to = "directions") %>%
+    ggplot(.) +
+    geom_bar(
+        aes(
+            x=directions,
+            y=after_stat(count)/sum(after_stat(count)), 
+            fill=name
+        ), 
+        position="dodge") +
+    labs(
+        title="Number of Directions Faced by Walkways per portico",
+        x="# of Directions",
+        y="Relative Frequency"
+    ) +
+    scale_fill_discrete(
+        name="Walkway Type",
+        labels=c("Portico", "Walkway")
+    )
+```
+
+Might be a possibility for an "unportico'd walkway" column? So walkways that exist but aren't 1 in portico. 
+
+# Save datasets
+
+```{r}
+# df %>% readr::write_csv(file="data/sep_13/pompei_preprocessed.csv")
+# sides %>% readr::write_csv(file="data/sides.csv")
+# walkway_and_portico %>% readr::write_csv(file="data/walkway_and_portico_directions.csv")
+```
+

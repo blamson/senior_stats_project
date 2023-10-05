@@ -2,7 +2,7 @@
 title: "Exploratory Data Analysis"
 author: "Brady Lamson"
 format: html
-editor: visual
+editor: source
 ---
 
 ```{r}
@@ -149,6 +149,7 @@ hist(log(square), 30)
 # hist(temp$columns)
 hist(as.numeric(df$columns) %>% log(), 20)
 ```
+
 ```{r}
 df$total_frstdng_supports %>% log() %>% hist(15)
 ```
@@ -183,7 +184,6 @@ df$`large_room_on_axis?` %>% table() %>% barplot()
 ```{r}
 df$pillars %>% table() %>% barplot()
 ```
-
 
 ### Completeness but "NA" counts as NA
 
@@ -242,7 +242,6 @@ NOTE: Probably just keep the yes/no and maybe the wide/not-wide depending on fre
 ```{r}
 barplot(table(df$tablinum))
 ```
-
 
 ```{r}
 df_complete_vars %>% filter(tablinum == "NA")
@@ -355,7 +354,7 @@ df %>% select(c("atria", "corinthian"))
 df %>% filter(corinthian == 1)
 ```
 
-Interesting note that 3 of the 4 results here are from different gardens of the same complex. 
+Interesting note that 3 of the 4 results here are from different gardens of the same complex.
 
 ## Creating binary column list
 
@@ -365,7 +364,7 @@ Potential binary columns include "corinthian", "peristyle type", "tablinum", "pl
 
 ### Tablinum
 
-NOTE: Mention changing of string "NA" to NA. 
+NOTE: Mention changing of string "NA" to NA.
 
 ```{r}
 df <- 
@@ -390,7 +389,6 @@ missing_has_tab <- df %>% filter(is.na(has_tablinum)) %>% nrow()
 glue::glue("has_tablinum has {missing_has_tab} missing values")
 ```
 
-
 ### Peristyle Type
 
 ```{r}
@@ -410,7 +408,6 @@ df %>% select(c(peristyle_type, truncated_peristyle))
 df$truncated_peristyle %>% hist()
 ```
 
-
 ## Combine them into cleaned_df
 
 ```{r}
@@ -420,12 +417,11 @@ cleaned_df
 
 ## Binary Correlation Matrix
 
-Pairwise complete obs is imperfect as it only computes correlation for rows where both values are present, but we get no information otherwise. 
+Pairwise complete obs is imperfect as it only computes correlation for rows where both values are present, but we get no information otherwise.
 
 ```{r}
 cleaned_df %>% select(-id) %>% cor(use='pairwise.complete.obs')
 ```
-
 
 # Evaluating possible types of missing values
 

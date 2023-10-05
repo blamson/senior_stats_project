@@ -1,0 +1,176 @@
+id,walkway_N,walkway_S,walkway_E,walkway_W,directions
+I.02.16_house,1,0,1,0,2
+I.02.17_house,1,0,0,1,2
+I.02.24_caupona / Officina Libraria,0,1,0,1,2
+I.02.28_House of the Metal Grate / House of the Tetrastyle Atrium,0,1,1,0,2
+I.03.03_House of Epidius Fortunatus,1,0,1,1,3
+I.03.08b_house,1,0,1,1,3
+I.03.20_house,1,0,0,1,2
+I.03.23_House of Actius Anicetus / House of the Amphitheatre Riot,1,0,1,0,2
+I.03.24_House of Capella,1,0,1,0,2
+I.03.25_House of the Warriors,1,1,1,0,3
+I.03.30_house,1,1,0,1,3
+I.04.02_house,0,1,0,1,2
+I.04.05/25_House of the Citharist north,1,1,1,0,3
+I.06.02_House of the Cryptoporticus,1,1,1,0,3
+I.06.08/9_shophouse,1,0,1,0,2
+I.06.11_House of the Theatrical Paintings,1,0,1,0,2
+I.06.13_House of Stallius Eros,0,1,1,0,2
+I.07.07_House of the Priest Amandus,1,0,1,0,2
+I.07.19_house,1,0,1,0,2
+I.08.05_House of the Indian Statuette,1,0,1,0,2
+I.08.09_House of L. Vetutius Placidius,1,0,0,0,1
+I.08.17_House of the Four Styles,1,0,0,1,2
+I.09.01_House of the Beautiful Impluvium,1,1,1,0,3
+I.09.03_House of Successus,1,0,1,1,3
+I.09.05_House of the Orchard,1,1,1,0,3
+I.09.10_house,0,0,1,0,1
+I.09.12_House of Amarantus,0,1,1,0,2
+I.09.13_House of Ceres,0,1,1,0,2
+I.10.07_House of the Blacksmith,1,0,0,0,1
+I.11.14_House of Cherem,1,0,1,1,3
+I.11.15_House of the Second Story,0,1,1,0,2
+I.12.06_house,1,1,1,1,4
+I.12.11_house,0,1,1,1,3
+I.13.1_House of Crescens,1,1,1,0,3
+I.13.2_House of Sutoria Primigenia,1,0,0,0,1
+I.15.03_House of the Ship Europa,1,1,0,1,3
+I.16.02_House of the Cylindrical Columns,1,0,1,0,2
+I.16.05_house,0,1,1,1,3
+I.17.04_House of the Arches,0,1,0,1,2
+"II.02.02_House of Octavius Quartius, small peristyle",1,0,1,1,3
+II.02.04_House of the Augustales,1,0,1,0,2
+II.03.03_House of the Marine Venus,1,0,1,1,3
+II.09.05_house,0,1,1,0,2
+III.02.01_House of Trebius Valens,0,1,1,1,3
+III.04.02_House of the Moralist,1,0,1,0,2
+III.04.b_House of Pinarius Cerialis / House of the Gemmarius / House of Iphegenia,1,0,1,0,2
+V.01.07_House of the Bull,0,1,1,1,3
+V.01.18_House of the Epigrams,1,0,1,1,3
+V.01.26_House of Caecilius Jocundus,1,0,0,1,2
+V.02.04_House of the Triclinium / House of Bacchus,1,1,0,1,3
+V.02.10_House of Paccia,1,1,1,0,3
+V.02.x_House of Orion,0,1,1,0,2
+V.02.15_House of Jupiter,1,0,1,0,2
+V.02.g_House of N. Fufidius Successus,1,0,0,0,1
+V.03.04_House of the Ceiling,1,0,0,1,2
+V.03.10_house,0,1,0,1,2
+V.04.03_House of the Flamen,0,1,0,0,1
+V.04.a_House of Marcus Lucretius Fronto,0,1,0,0,1
+V.04.b_house,0,1,0,1,2
+VI.01.01_Caupona,0,1,0,0,1
+VI.01.10_House of the Surgeon,0,0,0,1,1
+VI.02.04_House of Sallust east,0,0,0,1,1
+VI.02.04_House of Sallust south,1,0,1,1,3
+VI.02.16_House of Narcissus,1,0,0,1,2
+VI.02.22/15_House of the Dancers,1,0,1,1,3
+VI.02.25_house,1,1,1,1,4
+VI.05.04_house,0,0,0,1,1
+VI.05.05_House of the Grand Duke of Russia,1,0,1,1,3
+VI.05.10_house,1,1,1,0,3
+VI.05.14_house,1,1,1,0,3
+VI.06.01_House of Pansa,0,1,0,0,1
+VI.07.06_House of Hercules,0,1,0,1,2
+VI.07.07_house,0,1,1,0,2
+VI.07.18_House of Venus and Adonis,0,1,0,1,2
+VI.07.19_House of Inachus and Io,1,0,1,0,2
+VI.07.20/21_House of the Silver Vases,1,1,1,0,3
+VI.08.05_House of the Tragic Poet,0,1,1,1,3
+VI.08.22_House of the Great Fountain,0,0,1,0,1
+VI.08.23/24_House of the Small Fountain,1,0,1,0,2
+VI.09.03/5_House of the Centaur east,0,0,0,1,1
+VI.09.03/5_House of the Centaur south,1,0,1,0,2
+VI.09.06/7_House of the Dioscuri south,1,0,0,1,2
+VI.09.06/7_House of the Dioscuri east,0,1,0,1,2
+VI.10.02_House of the Five Skeletons,1,0,1,1,3
+VI.10.06_House of Pomponius,1,0,0,1,2
+VI.10.11_House of the Ship,0,1,0,0,1
+VI.11.04/17_house,1,0,0,1,2
+VI.13.06_House of Terentius Eudoxus,0,1,1,1,3
+VI.13.13_house,0,1,1,0,2
+VI.13.19_House of Sex. Pompeius Axiochus,1,0,0,1,2
+VI.14.12_house,0,1,1,0,2
+VI.14.20_House of Orpheus,1,0,1,0,2
+VI.14.25_house,1,0,0,0,1
+VI.14.38_House of C. Poppaeus Firmus,1,1,0,1,3
+VI.14.39_House of Axius,1,0,0,0,1
+VI.14.40_house,1,1,0,1,3
+VI.14.43_House of the Scientists,1,0,0,1,2
+VI.15.01_House of the Vettii,1,1,1,0,3
+VI.15.05_House of M. Pupius Rufus,1,1,1,0,3
+VI.15.08_House of the Prince of Naples,0,0,1,0,1
+VI.16.26/27_house,1,0,0,0,1
+VI.16.36_house,1,0,1,1,3
+VII.01.25/47_House of Siricus south,1,0,0,1,2
+VII.02.51_House of Suettius,0,1,1,0,2
+VII.03.11/12_House of the Infant Hercules,1,0,1,1,3
+VII.03.13_House of the Double Lararium,1,1,0,1,3
+VII.03.29_House of M. Spurius Mesor,0,0,0,1,1
+VII.03.38_house,1,0,0,1,2
+VII.04.10_House of Bacchus--destroyed,0,1,0,0,1
+VII.04.20_House of the Wine Merchant--destroyed,0,1,1,0,2
+VII.04.48_House of the Old Hunt,1,0,1,0,2
+VII.04.56_House of the Grand Duke of Tuscany,1,0,0,1,2
+VII.04.57_House of the Figured Capitals,1,1,1,0,3
+VII.04.59_House of the Black Wall,1,1,0,1,3
+VII.06.03_House of the Archaizing Diana,1,0,1,0,2
+VII.06.07_house,1,0,1,1,3
+VII.06.28_house,0,1,1,1,3
+VII.06.30_House of Petutius Qiuntio,1,1,1,0,3
+VII.06.38_house,0,1,1,1,3
+VII.07.02_House of Calpurnius Diogenes,1,1,1,0,3
+VII.07.10_House of Romulus and Remus,1,1,1,0,3
+VII.07.23/17_House of C. Julius Primigenius,1,0,0,1,2
+VII.09.47_House of the Wedding of Hercules / House of Mars and Venus,1,0,1,1,3
+VII.09.63/60_House of the Fisherwoman,1,0,0,1,2
+VII.10.03_House of the New Hunt,0,1,1,1,3
+VII.10.05_house,1,1,0,1,3
+VII.11.10_house,1,0,1,0,2
+VII.12.03_House of L. Caecilius Capella,1,0,1,0,2
+VII.12.26_House of Helen and Paris,1,1,1,0,3
+VII.12.28_House of the Balcony,1,0,0,1,2
+VII.13.04_House of Ganymede,1,1,1,0,3
+VII.14.05_House of the Queen of England / House of the Banker,0,1,0,0,1
+VII.14.09_House of the Doves / House of V. Popidius,0,1,0,0,1
+VII.15.02_House of the Sailor,0,1,1,0,2
+VII.15.12_House of C. Iulius Nicephorus,0,0,1,0,1
+VIII.02.13_house,0,1,1,0,2
+VIII.03.04_House of Hercules and Auge,1,0,0,1,2
+VIII.03.15_Caupona/House of Adonis,0,1,0,1,2
+VIII.03.18_House of Diana,1,0,1,1,3
+VIII.03.21_house,0,1,1,0,2
+VIII.03.24_House of Apollo and Coronis,1,0,1,1,3
+VIII.03.27_house,0,1,0,1,2
+VIII.03.31_House of Pan,1,0,0,1,2
+VIII.04.27_House and Bakery of Felix,0,0,1,0,1
+VIII.04.33_house,1,0,0,1,2
+VIII.05.09_house,1,0,0,0,1
+VIII.05.24_House of the Physician / House of the Judgment of Solomon,1,0,1,1,3
+VIII.05.28_House of Popidius Celsinus,1,0,1,1,3
+VIII.05.37_House of the Red Walls,0,1,1,1,3
+VIII.05.39_House of Acceptus and Euhodia,0,0,0,1,1
+VIII.07.06_house,0,0,1,0,1
+VIII.07.26/27_house,1,0,0,0,1
+zIX.01.12_shophouse,1,1,0,1,3
+zIX.01.20_House of Epidius Rufus,0,1,0,0,1
+zIX.01.22/29_House of M. Epidius Sabinus north,1,1,1,0,3
+zIX.01.22/29_House of M. Epidius Sabinus south,1,1,1,0,3
+zIX.02.10_House of Chlorus and Caprasia,0,1,1,0,2
+zIX.02.16_House of Princess Margherita/ House of Bellerophon,0,0,1,0,1
+zIX.02.17_house,1,0,1,0,2
+zIX.02.18_House of Curvius Marcellus,0,1,1,0,2
+zIX.02.21_house,1,0,1,0,2
+zIX.02.26_House of M. Casellius Marcellus,1,0,0,0,1
+zIX.02.27_house,1,0,1,0,2
+zIX.03.05_House of Marcus Lucretius,0,1,1,0,2
+zIX.03.15_house,1,1,1,0,3
+zIX.05.09_House of the Pygmies,1,1,1,0,3
+zIX.05.11_house,1,0,0,1,2
+zIX.05.14/16_house,0,1,1,0,2
+zIX.06.g_house,1,1,1,1,4
+zIX.08.c_house,1,0,1,1,3
+zIX.09.02_caupona,1,0,0,1,2
+zIX.09.06_House and Wine Shop of C. Caesius Restitutus,1,0,0,0,1
+zIX.12.09_House of the Painters at Work,1,0,1,1,3
+zIX.13.03_House of Julius Polybius,1,1,1,0,3
+zIX.14.04_House of M. Obellius Firmus,1,1,1,1,4
