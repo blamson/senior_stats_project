@@ -22,12 +22,21 @@ source('helpers.R')
 # Data loading and preprocessing
 
 ```{r}
+load_preprocessed <- TRUE
+
 data_date <- "data/sep_13"
-data_path <- "Pompeii data 2023 for stats .xlsx"
-full_path <- paste0(data_date, "/", data_path) 
-df <- readxl::read_excel(full_path, sheet="all peristyles")
-df <- fix_variable_names(df)
-df <- create_unique_id(df)
+
+if (load_preprocessed) {
+    data_path <- "pompei_preprocessed.csv"
+    full_path <- paste0(data_date, "/", data_path)
+    df <- readr::read_csv(full_path)
+} else {
+    data_path <- "Pompeii data 2023 for stats .xlsx"
+    full_path <- paste0(data_date, "/", data_path) 
+    df <- readxl::read_excel(full_path, sheet="all peristyles")
+    df <- fix_variable_names(df)
+    df <- create_unique_id(df)
+}
 
 df
 ```
@@ -56,7 +65,7 @@ The earlier instance of this column appears to be the same column but with two k
 So, if we use the more complete numeric column we can also look at min width.
 
 ```{r}
-width <- df %>% select(c(walkway_width_min, walkway_width_max...35)) 
+width <- df %>% select(c(walkway_width_min, walkway_width_max...34)) 
 
 width
 width %>% completeness_by_var()
@@ -76,14 +85,14 @@ width
 ```{r}
 ggplot() +
     geom_boxplot(aes(x="Minimum", y=width$walkway_width_min)) +
-    geom_boxplot(aes(x="Maximum", y=width$walkway_width_max...35)) +
+    geom_boxplot(aes(x="Maximum", y=width$walkway_width_max...34)) +
     ggtitle("Comparison of Maximum and Minimum Walkway Widths") +
     labs(x="", y="Width")
 ```
 
 ```{r}
 hist(width$walkway_width_min)
-hist(width$walkway_width_max...35)
+hist(width$walkway_width_max...34)
 
 # TODO: Use gather on width to make this less nonsense?
 
@@ -100,7 +109,7 @@ bin_count=15
 
 width <-
     width %>%
-    mutate(ratio = walkway_width_max...35 / walkway_width_min)
+    mutate(ratio = walkway_width_max...34 / walkway_width_min)
 
 labels = labs(title="Histogram of Maximum vs. Minimum Walkway Width", x="Ratio (Max:Min)", y="Frequency")
 

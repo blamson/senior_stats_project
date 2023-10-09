@@ -64,3 +64,60 @@ Got a new dataframe using new columns.
 Converted peristyle type, tablinum, and atria into binary columns
 
 Created a correlation matrix but it is imperfect due to missing values
+
+# October 5th notes
+
+## Complete with respect 
+
+How complete are other rows with respect to the columns contained in width?
+    - Also in general here, this will be useful analysis to have
+    - Set up a helper function for this type of analysis
+
+## Heatmap
+    
+Setup a heatmap for walkway and portico. 
+    Walkway
+    1 2 3 4
+  1
+  2
+P 3
+  4
+
+## Meeting notes
+
+Column material:
+Stone is a good thing to look for. They're more expensive and typically older.
+    - Nuanced because some older homes can be damaged by an earthquake and repairs
+        would be done using a mix of materials
+    - Rubble and masonry are probably not super useful. 
+    
+We can ignore PPM column. Its just for Summers reference.
+
+## Peristyle Type
+
+Peristyle Type
+    Peristyle with 4 sides with columns is True
+    3 or less is Truncated
+    
+## Walkway/Portico sides
+    Check how many of these have Peristyle Type
+    
+Is the widest walkway across the entrance or aligned with the entrance?
+    - parallel or perpendicular. 
+    
+## Atrium/Tablinum are within the same unit of the building
+    An NA here means there totally wasnt a tablinum as its a big feature thats hard to miss.
+    
+## Pluteus
+    The directional information is sparse and useless
+    Pluteus can be complete or incomplete but data is too inconsistent to extract info from
+    If we were to use it'd be more of a "did it exist or not" yes/no boolean.
+    
+## Next steps
+    - We're gonna focus on walkway widths, alignment and material. 
+    - How does the largest width walkway direction correlate with direction of the entrance
+    - Widest walkway direction is probably what we want to use. Smallest one isnt helpful.
+        - Rethink widest walkway as "Dominant walkway". What direction does the dominant walkway face?
+    - For the 26% of data w/ walkways, how many of those are true/truncated?
+    - Interesting goal could be to use the columns provided in phone gallery to "predict"" the entrance direction
+    - Could this information also predict visibility of the peristyle???
