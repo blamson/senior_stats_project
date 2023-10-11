@@ -85,3 +85,13 @@ count_particular_string <- function(dataframe, string) {
     return(return_df)
     
 }
+
+pattern_to_bool <- function(string, pattern) {
+    # Returns NA if string is NA, 1 if pattern is found, 0 otherwise. 
+    return(
+        ifelse(
+            is.na(string), NA, 
+            as.numeric(str_detect(string, pattern))
+        )
+    )
+}

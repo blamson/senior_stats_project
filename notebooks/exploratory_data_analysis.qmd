@@ -13,7 +13,7 @@ library(readxl)
 library(glue)
 library(ggplot2)
 library(tidyr)
-source('helpers.R')
+source('../helpers.R')
 ```
 
 # Reading Data and preprocessing
@@ -23,7 +23,7 @@ source('helpers.R')
 ```{r}
 data_date <- "data/sep_10"
 data_path <- "Pompeii data 2023 for stats.xlsx"
-full_path <- paste0(data_date, "/", data_path) 
+full_path <- paste0("../", data_date, "/", data_path) 
 sheets <- readxl::excel_sheets(full_path)
 print(sheets)
 

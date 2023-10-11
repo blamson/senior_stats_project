@@ -1,0 +1,217 @@
+---
+title: "Creating Model"
+author: "Brady Lamson"
+format: pdf
+---
+
+# Import Packages
+
+```{r}
+library(stringr)
+library(dplyr)
+library(skimr)
+library(readxl)
+library(glue)
+library(ggplot2)
+library(tidyr)
+library(readr)
+source('../helpers.R')
+```
+
+# Import Data
+
+```{r}
+load_preprocessed <- TRUE
+
+data_date <- "data/sep_13"
+
+if (load_preprocessed) {
+    data_path <- "pompei_preprocessed.csv"
+    full_path <- paste0("../", data_date, "/", data_path)
+    df <- readr::read_csv(full_path)
+} else {
+    data_path <- "Pompeii data 2023 for stats .xlsx"
+    full_path <- paste0(data_date, "/", data_path) 
+    df <- readxl::read_excel(full_path, sheet="all peristyles")
+    df <- fix_variable_names(df)
+    df <- create_unique_id(df)
+}
+
+df
+```
+
+# Cleaning Required Columns
+
+The columns we'll want to include in our model are as follows:
+
+- Visibility from entrance
+- Peristyle Size
+- Column Material (stone/masonry boolean)
+- Widest Walkway orientation
+- Direction of Entrance
+- Major Axis of Garden
+- Orientation of large room (large room on axis)
+
+## Visibility from entrance
+
+### Possible Values
+
+```{r}
+df$`visible_from_entrance?` %>% unique()
+```
+
+We can make this a quick yes/no boolean
+
+```{r}
+df %>% mutate(
+    
+) %>%
+    select(visible_from_entrance)
+```
+
+
+```{r}
+df <- 
+    df %>% 
+    mutate(
+        visible_from_entrance = pattern_to_bool(string=`visible_from_entrance?`, pattern="yes")
+    )
+
+df %>% select(c(`visible_from_entrance?`, visible_from_entrance))
+```
+
+## Peristyle size
+
+```{r}
+df$peristyle_size
+```
+
+This column is already totally usable.
+
+## Column Material
+
+This one requires some love, every row is unique text basically. We only care if a column has either stone or masonry and will design a boolean around that.
+
+```{r}
+df$column_material %>% head()
+```
+
+```{r}
+
+df <- 
+    df %>% 
+    mutate(
+        stone_used_in_column = pattern_to_bool(string=column_material, pattern="(stone|masonry)")
+    )
+
+df %>% select(c(stone_used_in_column, column_material))
+```
+
+## Widest Walkway Orientation
+
+```{r}
+df$widest_walkway_dir %>%
+```
+
+Here I think the best call is to create 4 dummy variables much like for walkways and peristyles
+
+```{r}
+df <- 
+    df %>%
+    mutate(
+        widest_walkway_N = pattern_to_bool(string=widest_walkway_dir, pattern="N"),
+        widest_walkway_S = pattern_to_bool(string=widest_walkway_dir, pattern="S"),
+        widest_walkway_E = pattern_to_bool(string=widest_walkway_dir, pattern="E"),
+        widest_walkway_W = pattern_to_bool(string=widest_walkway_dir, pattern="W")
+    ) 
+
+df %>%
+    select(c(widest_walkway_dir, widest_walkway_N, widest_walkway_S, widest_walkway_E, widest_walkway_W))
+```
+
+## Direction of Entrance
+
+```{r}
+df$peristyle_direction_from_main_entrance %>% unique()
+```
+
+Same setup here, 4 directional dummy variables
+
+```{r}
+df <- 
+    df %>%
+    mutate(
+        per_dir_from_entr_N = pattern_to_bool(string=peristyle_direction_from_main_entrance, pattern="N"),
+        per_dir_from_entr_S = pattern_to_bool(string=peristyle_direction_from_main_entrance, pattern="S"),
+        per_dir_from_entr_E = pattern_to_bool(string=peristyle_direction_from_main_entrance, pattern="E"),
+        per_dir_from_entr_W = pattern_to_bool(string=peristyle_direction_from_main_entrance, pattern="W")
+    ) 
+
+df %>%
+    select(c(
+        peristyle_direction_from_main_entrance, 
+        per_dir_from_entr_N, per_dir_from_entr_S, per_dir_from_entr_E, per_dir_from_entr_W
+    ))
+```
+
+Not entirely convinced by this cleanup here. Confused by "not visible" and "S (not visible)". Surely even not visible has directionality, right?
+
+## Major Axis of Garden
+
+Unsure which column this refers to
+
+```{r}
+df$alignment_with_atrium %>% unique()
+```
+
+## Orientation of Large Room
+
+```{r}
+df %>% select(c(largest_room_direction...77, largest_room_direction...123))
+```
+
+I believe 123 is the one we want to keep here.
+
+```{r}
+df <- 
+    df %>%
+    mutate(largest_room_dir = largest_room_direction...123) %>%
+    mutate(
+        large_room_dir_N = pattern_to_bool(string=largest_room_dir, pattern="N"),
+        large_room_dir_S = pattern_to_bool(string=largest_room_dir, pattern="S"),
+        large_room_dir_E = pattern_to_bool(string=largest_room_dir, pattern="E"),
+        large_room_dir_W = pattern_to_bool(string=largest_room_dir, pattern="W")
+    ) 
+
+df %>%
+    select(c(
+        largest_room_dir, 
+        large_room_dir_N, large_room_dir_S, large_room_dir_E, large_room_dir_W
+    ))
+```
+
+## Combine everything into one smaller dataset
+
+```{r}
+large_room_dir_vars <- c(
+    "large_room_dir_N", "large_room_dir_S", "large_room_dir_E", "large_room_dir_W"
+)
+
+per_dir_from_entr_vars <- c(
+    "per_dir_from_entr_N", "per_dir_from_entr_S", "per_dir_from_entr_E", "per_dir_from_entr_W"
+)
+
+widest_walkway_dir_vars <- c(
+    "widest_walkway_N", "widest_walkway_S", "widest_walkway_E", "widest_walkway_W"
+)
+
+misc <- c("id", "visible_from_entrance", "stone_used_in_column", "peristyle_size")
+
+model_vars = c(misc, large_room_dir_vars, per_dir_from_entr_vars, widest_walkway_dir_vars)
+
+df_model <- df %>%
+    select(model_vars)
+
+df_model
+```
+

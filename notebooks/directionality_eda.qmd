@@ -15,7 +15,7 @@ library(glue)
 library(ggplot2)
 library(tidyr)
 library(readr)
-source('helpers.R')
+source('../helpers.R')
 ```
 
 
@@ -28,7 +28,7 @@ data_date <- "data/sep_13"
 
 if (load_preprocessed) {
     data_path <- "pompei_preprocessed.csv"
-    full_path <- paste0(data_date, "/", data_path)
+    full_path <- paste0("../", data_date, "/", data_path)
     df <- readr::read_csv(full_path)
 } else {
     data_path <- "Pompeii data 2023 for stats .xlsx"
@@ -141,7 +141,7 @@ sides <-
     filter(rowSums(!is.na(.)) > 1) %>%
     # Replace all remaining NAs with 0
     replace(is.na(.), 0) %>%
-    mutate(directions = rowSums(across(where(is.numeric))))
+    mutate(walkway_count = rowSums(across(where(is.numeric))))
 
 sides
 ```
@@ -150,13 +150,13 @@ sides
 ggplot(sides) +
     geom_bar(
         aes(
-            x=directions, 
+            x=walkway_count, 
             y=after_stat(count)/sum(after_stat(count)) * 100
         ), fill="#619CFF", color="blue"
     ) +
     labs(
-        title="Frequency of how many directions walkways face per peristyle",
-        x="# Directions Faced", 
+        title="Walkway count relative frequency",
+        x="# of Walkways", 
         y="Relative Frequency (%)"
     )
 ```
@@ -171,7 +171,7 @@ portico <-
     filter(rowSums(!is.na(.)) > 1) %>%
     # Replace all remaining NAs with 0
     replace(is.na(.), 0) %>%
-    mutate(directions = rowSums(across(where(is.numeric))))
+    mutate(portico_count = rowSums(across(where(is.numeric))))
 
 portico
 ```
@@ -180,13 +180,13 @@ portico
 ggplot(portico) +
     geom_bar(
         aes(
-            x=directions, 
+            x=portico_count, 
             y=after_stat(count)/sum(after_stat(count)) * 100
         ), fill="#619CFF", color="blue"
     ) +
     labs(
-        title="Frequency of how many directions porticos face per peristyle",
-        x="# Directions Faced", 
+        title="Portico Count Relative Frequency",
+        x="# of Porticos", 
         y="Relative Frequency (%)"
     )
 ```
@@ -196,22 +196,18 @@ ggplot(portico) +
 
 ```{r}
 walkway_and_portico <- 
-    left_join(sides, portico, by = join_by(id == id)) %>%
-    rename(
-        walkway_directions = directions.x,
-        portico_directions = directions.y
-    )
+    left_join(sides, portico, by = join_by(id == id))
 
 walkway_and_portico
 ```
 
 ```{r}
 walkway_and_portico %>% 
-    pivot_longer(c(walkway_directions, portico_directions), values_to = "directions") %>%
+    pivot_longer(c(walkway_count, portico_count), values_to = "counts") %>%
     ggplot(.) +
     geom_bar(
         aes(
-            x=directions,
+            x=counts,
             y=after_stat(count)/sum(after_stat(count)), 
             fill=name
         ), 
@@ -228,6 +224,33 @@ walkway_and_portico %>%
 ```
 
 Might be a possibility for an "unportico'd walkway" column? So walkways that exist but aren't 1 in portico. 
+
+## Portico and walkway heatmap
+
+Here I turn the values into factors so they can be counted easily and then count them.
+From there we make a heatmap using that count as the fill value. 
+Then I use `geom_text` to add the actual value on top of its "bar"
+
+```{r}
+walkway_and_portico %>%
+    mutate(
+        walkway_count = factor(walkway_count),
+        portico_count = factor(portico_count)
+    ) %>%
+    na.omit() %>%
+    count(walkway_count, portico_count) %>%
+    ggplot(., aes(walkway_count, portico_count, fill=n)) +
+    geom_tile() +
+    geom_text(aes(label = n), vjust = 1, color = "white", size = 4, fontface = "bold") +
+    labs(
+        title="Walkway vs. Portico count heatmap",
+        x="Number of Walkways",
+        y="Number of Porticos",
+        fill="Frequency"
+    ) +
+    theme_minimal()
+```
+
 
 # Save datasets
 
