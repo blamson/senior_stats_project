@@ -232,6 +232,8 @@ df_model %>% filter(corin == 1) %>% select(c(id, corin, order))
 df_model$corin %>% sum(na.rm = T)
 ```
 
+# Modeling
+
 ```{r}
 model <- glm(
     visible_from_entrance ~ log_peri_size + corin + stone_used_in_column, 
@@ -259,7 +261,69 @@ df_model %>% select(id, visible_from_entrance, order, corin) %>% dplyr::arrange(
 df
 ```
 
+## Log peristyle size as response
+
+```{r}
+model <- lm(
+    log_peri_size ~ visible_from_entrance + corin + stone_used_in_column, 
+    data=df_model
+)
+
+summary(model)
+```
+
+## Correlation of widest walkways
+
+```{r}
+df_model %>%
+    select(c(widest_walkway_E, widest_walkway_N, widest_walkway_S, widest_walkway_W)) %>%
+    cor(use='complete.obs')
+```
+
+## Correlation of Peristyle direction from entrance
+
+```{r}
+df_model %>%
+    select(c(per_dir_from_entr_N, per_dir_from_entr_S, per_dir_from_entr_E, per_dir_from_entr_W)) %>%
+    cor(use='complete.obs')
+```
+
+## Using widest walkways in model
+
+We don't want to use all 4 so I'll use a for loop to examine which (if any) performs well.
+
+```{r}
+
+for (widest_walkway_dir in widest_walkway_dir_vars) {
+    model <- glm(
+        visible_from_entrance ~ log_peri_size + corin + stone_used_in_column + eval(parse(text=widest_walkway_dir)), 
+        family=binomial(link="logit"),
+        data=df_model
+    )
+    
+    print(glue("--- [Model using {widest_walkway_dir}] ---"))
+    
+    print(summary(model))
+}
+```
+
+Seems walkway direction destroys the degrees of freedom and the model entirely. 
+
+## Using peristyle direction from entrance
+
+```{r}
+for (per_dir in per_dir_from_entr_vars) {
+    model <- glm(
+        visible_from_entrance ~ log_peri_size + corin + stone_used_in_column + eval(parse(text=per_dir)), 
+        family=binomial(link="logit"),
+        data=df_model
+    )
+    
+    print(glue("\n\n--- [Model using {per_dir}] ---"))
+    
+    print(summary(model))
+}
+```
+
 # Next steps
-- Look at log peristyle size as response variable
 - Investigate discrepency between my and study dataset
-- Tinker with other predictor variables
