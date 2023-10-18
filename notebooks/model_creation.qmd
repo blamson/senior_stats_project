@@ -16,6 +16,7 @@ library(ggplot2)
 library(tidyr)
 library(readr)
 source('../helpers.R')
+library(skimr)
 ```
 
 # Import Data
@@ -62,13 +63,6 @@ df$`visible_from_entrance?` %>% unique()
 
 We can make this a quick yes/no boolean
 
-```{r}
-df %>% mutate(
-    
-) %>%
-    select(visible_from_entrance)
-```
-
 
 ```{r}
 df <- 
@@ -110,7 +104,7 @@ df %>% select(c(stone_used_in_column, column_material))
 ## Widest Walkway Orientation
 
 ```{r}
-df$widest_walkway_dir %>%
+df$widest_walkway_dir %>% unique()
 ```
 
 Here I think the best call is to create 4 dummy variables much like for walkways and peristyles
@@ -207,11 +201,65 @@ widest_walkway_dir_vars <- c(
 
 misc <- c("id", "visible_from_entrance", "stone_used_in_column", "peristyle_size")
 
-model_vars = c(misc, large_room_dir_vars, per_dir_from_entr_vars, widest_walkway_dir_vars)
+messing_around <- c("order", "corin", "log_peri_size")
+
+model_vars = c(misc, messing_around, large_room_dir_vars, per_dir_from_entr_vars, widest_walkway_dir_vars)
 
 df_model <- df %>%
+    # Messing around ---
+    mutate(order = na_if(order, "unknown")) %>%
+    mutate(order = str_replace(order, "Corinthian at entrance", "Doric")) %>%
+    mutate(order = str_replace(order, "Doric, Corinthian piers", "Doric")) %>%
+    mutate(
+        corin = pattern_to_bool(order, "(Corinthian|corinth)"),
+        log_peri_size = I(log(peristyle_size))
+    ) %>%
+    filter(!is.na(corin)) %>%
+    # End messing around ---
     select(model_vars)
 
 df_model
 ```
 
+## Exploration
+
+```{r}
+df_model %>% filter(corin == 1) %>% select(c(id, corin, order))
+```
+
+
+```{r}
+df_model$corin %>% sum(na.rm = T)
+```
+
+```{r}
+model <- glm(
+    visible_from_entrance ~ log_peri_size + corin + stone_used_in_column, 
+    family=binomial(link="logit"),
+    data=df_model
+)
+
+summary(model)
+```
+
+```{r}
+model
+```
+
+
+```{r}
+skim(df_model)
+```
+
+```{r}
+df_model %>% select(id, visible_from_entrance, order, corin) %>% dplyr::arrange(corin)
+```
+
+```{r}
+df
+```
+
+# Next steps
+- Look at log peristyle size as response variable
+- Investigate discrepency between my and study dataset
+- Tinker with other predictor variables
