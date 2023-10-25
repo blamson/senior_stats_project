@@ -270,7 +270,13 @@ model <- lm(
 )
 
 summary(model)
+anova(model)
 ```
+
+```{r}
+aov(log_peri_size ~ visible_from_entrance + corin + stone_used_in_column, data = df_model) %>% summary()
+```
+
 
 ## Correlation of widest walkways
 
@@ -284,9 +290,19 @@ df_model %>%
 
 ```{r}
 df_model %>%
-    select(c(per_dir_from_entr_N, per_dir_from_entr_S, per_dir_from_entr_E, per_dir_from_entr_W)) %>%
+    select(
+        c(
+            c(per_dir_from_entr_N, per_dir_from_entr_S, per_dir_from_entr_E, per_dir_from_entr_W),
+            c(widest_walkway_N, widest_walkway_S, widest_walkway_E, widest_walkway_W)
+        )
+    ) %>%
     cor(use='complete.obs')
 ```
+```{r}
+df_model %>%
+    
+```
+
 
 ## Using widest walkways in model
 
@@ -304,10 +320,28 @@ for (widest_walkway_dir in widest_walkway_dir_vars) {
     print(glue("--- [Model using {widest_walkway_dir}] ---"))
     
     print(summary(model))
+    
+    print(anova(model))
 }
 ```
 
 Seems walkway direction destroys the degrees of freedom and the model entirely. 
+
+```{r}
+for (widest_walkway_dir in widest_walkway_dir_vars) {
+    model <- lm(
+        log_peri_size ~ visible_from_entrance + corin + stone_used_in_column + eval(parse(text=widest_walkway_dir)), 
+        data=df_model
+    )
+    
+    print(glue("\n\n--- [Model using {widest_walkway_dir}] ---"))
+    
+    print(summary(model))
+    
+    print(anova(model))
+}
+```
+
 
 ## Using peristyle direction from entrance
 
@@ -325,5 +359,25 @@ for (per_dir in per_dir_from_entr_vars) {
 }
 ```
 
+```{r}
+for (per_dir in per_dir_from_entr_vars) {
+    model <- lm(
+        log_peri_size ~ visible_from_entrance + corin + stone_used_in_column + eval(parse(text=per_dir)), 
+        data=df_model
+    )
+    
+    print(glue("--- [Model using {per_dir}] ---"))
+    
+    print(summary(model))
+    
+    print(anova(model))
+}
+```
+
+
 # Next steps
 - Investigate discrepency between my and study dataset
+- add distance from dyhr's dataset
+- add in $X_{EW}$ and $X_{NS}$ variables
+- change "not visible" w/ no directions to NA
+- google AIC
