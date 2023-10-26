@@ -123,6 +123,33 @@ df %>%
     select(c(widest_walkway_dir, widest_walkway_N, widest_walkway_S, widest_walkway_E, widest_walkway_W))
 ```
 
+```{r}
+df <- 
+    df %>%
+    mutate(
+        widest_walkway_NS = ifelse(
+            (widest_walkway_E != 1 & widest_walkway_W != 1) &
+            (widest_walkway_N == 1 | widest_walkway_S == 1), 
+            1, 0
+        ),
+        widest_walkway_EW = ifelse(
+            (widest_walkway_N != 1 & widest_walkway_S != 1) &
+            (widest_walkway_E == 1 | widest_walkway_W == 1), 
+            1, 0
+        )
+    )
+    
+df %>% select(c(widest_walkway_N, widest_walkway_S, widest_walkway_E, widest_walkway_W, widest_walkway_NS, widest_walkway_EW))
+```
+
+```{r}
+df %>% filter(
+    widest_walkway_W == 1 | widest_walkway_E == 1
+) %>%
+    select(widest_walkway_N, widest_walkway_S, widest_walkway_NS)
+```
+
+
 ## Direction of Entrance
 
 ```{r}
@@ -134,6 +161,11 @@ Same setup here, 4 directional dummy variables
 ```{r}
 df <- 
     df %>%
+    mutate(peristyle_direction_from_main_entrance = ifelse(
+        peristyle_direction_from_main_entrance == "not visible" | 
+        peristyle_direction_from_main_entrance =="not visibile", 
+            NA, peristyle_direction_from_main_entrance
+    )) %>%
     mutate(
         per_dir_from_entr_N = pattern_to_bool(string=peristyle_direction_from_main_entrance, pattern="N"),
         per_dir_from_entr_S = pattern_to_bool(string=peristyle_direction_from_main_entrance, pattern="S"),
@@ -148,7 +180,27 @@ df %>%
     ))
 ```
 
-Not entirely convinced by this cleanup here. Confused by "not visible" and "S (not visible)". Surely even not visible has directionality, right?
+```{r}
+df <- 
+    df %>%
+    mutate(
+        per_dir_from_entr_NS = ifelse(
+            (per_dir_from_entr_E != 1 & per_dir_from_entr_W != 1) &
+            (per_dir_from_entr_N == 1 | per_dir_from_entr_S == 1), 
+            1, 0
+        ),
+        per_dir_from_entr_EW = ifelse(
+            (per_dir_from_entr_N != 1 & per_dir_from_entr_S != 1) &
+            (per_dir_from_entr_E == 1 | per_dir_from_entr_W == 1), 
+            1, 0
+        )
+    )
+    
+df %>% select(c(
+    per_dir_from_entr_N, per_dir_from_entr_S, per_dir_from_entr_E, per_dir_from_entr_W, 
+    per_dir_from_entr_NS, per_dir_from_entr_EW
+))
+```
 
 ## Major Axis of Garden
 
@@ -192,11 +244,13 @@ large_room_dir_vars <- c(
 )
 
 per_dir_from_entr_vars <- c(
-    "per_dir_from_entr_N", "per_dir_from_entr_S", "per_dir_from_entr_E", "per_dir_from_entr_W"
+    "per_dir_from_entr_N", "per_dir_from_entr_S", "per_dir_from_entr_E", "per_dir_from_entr_W",
+    "per_dir_from_entr_NS", "per_dir_from_entr_EW"
 )
 
 widest_walkway_dir_vars <- c(
-    "widest_walkway_N", "widest_walkway_S", "widest_walkway_E", "widest_walkway_W"
+    "widest_walkway_N", "widest_walkway_S", "widest_walkway_E", "widest_walkway_W",
+    "widest_walkway_NS", "widest_walkway_EW"
 )
 
 misc <- c("id", "visible_from_entrance", "stone_used_in_column", "peristyle_size")
@@ -227,10 +281,29 @@ df_model
 df_model %>% filter(corin == 1) %>% select(c(id, corin, order))
 ```
 
-
 ```{r}
 df_model$corin %>% sum(na.rm = T)
 ```
+
+### Checking number of corin == 1 when walkway and per dir exists
+
+```{r}
+df_model %>% filter(corin == 1 & !is.na(widest_walkway_N)) %>% select(c(id, corin, order))
+```
+
+```{r}
+df_model %>% filter(corin == 1 & !is.na(per_dir_from_entr_N)) %>% select(c(id, corin, order))
+```
+
+Wee see here that per_dir_from_entr leaves a lot more corin 1's on the table. 
+
+### Checking number of rows left when neither walkway or per dir can be NA
+
+```{r}
+df_model %>% filter(!is.na(widest_walkway_N) & !is.na(per_dir_from_entr_N))
+```
+
+Only 40 rows where BOTH of these sets of predictors aren't NA. 
 
 # Modeling
 
@@ -298,10 +371,6 @@ df_model %>%
     ) %>%
     cor(use='complete.obs')
 ```
-```{r}
-df_model %>%
-    
-```
 
 
 ## Using widest walkways in model
@@ -317,6 +386,7 @@ for (widest_walkway_dir in widest_walkway_dir_vars) {
         data=df_model
     )
     
+    writeLines("\n\n")
     print(glue("--- [Model using {widest_walkway_dir}] ---"))
     
     print(summary(model))
@@ -327,6 +397,7 @@ for (widest_walkway_dir in widest_walkway_dir_vars) {
 
 Seems walkway direction destroys the degrees of freedom and the model entirely. 
 
+
 ```{r}
 for (widest_walkway_dir in widest_walkway_dir_vars) {
     model <- lm(
@@ -334,6 +405,7 @@ for (widest_walkway_dir in widest_walkway_dir_vars) {
         data=df_model
     )
     
+    writeLines("\n\n")
     print(glue("\n\n--- [Model using {widest_walkway_dir}] ---"))
     
     print(summary(model))
@@ -353,6 +425,7 @@ for (per_dir in per_dir_from_entr_vars) {
         data=df_model
     )
     
+    writeLines("\n\n")
     print(glue("\n\n--- [Model using {per_dir}] ---"))
     
     print(summary(model))
@@ -366,6 +439,7 @@ for (per_dir in per_dir_from_entr_vars) {
         data=df_model
     )
     
+    writeLines("\n\n")
     print(glue("--- [Model using {per_dir}] ---"))
     
     print(summary(model))
