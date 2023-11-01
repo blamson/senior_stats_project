@@ -38,6 +38,15 @@ if (load_preprocessed) {
     df <- create_unique_id(df)
 }
 
+sides <- 
+    df %>%
+    select(c(id, walkway_N, walkway_S, walkway_E, walkway_W)) %>%
+    # Remove all rows where all 4 columns are NA
+    filter(rowSums(!is.na(.)) > 1) %>%
+    # Replace all remaining NAs with 0
+    replace(is.na(.), 0) %>%
+    mutate(walkway_count = rowSums(across(where(is.numeric))))
+
 df
 ```
 
@@ -274,7 +283,6 @@ df_model <- df %>%
 
 df_model
 ```
-
 ## Exploration
 
 ```{r}
@@ -381,7 +389,7 @@ We don't want to use all 4 so I'll use a for loop to examine which (if any) perf
 
 for (widest_walkway_dir in widest_walkway_dir_vars) {
     model <- glm(
-        visible_from_entrance ~ log_peri_size + corin + stone_used_in_column + eval(parse(text=widest_walkway_dir)), 
+        visible_from_entrance ~ log_peri_size + corin + stone_used_in_column, 
         family=binomial(link="logit"),
         data=df_model
     )
@@ -455,3 +463,30 @@ for (per_dir in per_dir_from_entr_vars) {
 - add in $X_{EW}$ and $X_{NS}$ variables
 - change "not visible" w/ no directions to NA
 - google AIC
+
+## Investigating ---
+```{r}
+df %>% head()
+```
+
+## Next Steps Oct 26
+
+### Table
+
+```{r}
+mytable <- table(df_model$corin, df_model$stone_used_in_column)
+colnames(mytable) <- c("no stone", "stone")
+rownames(mytable) <- c("not corinthian", "corinthian")
+mytable
+```
+
+Consider a new variable that is boolean.
+0 if not corinthian & not stone
+1 otherwise
+
+### Try different link functions
+Don't worry about interpretation, but give them a try
+
+### Create distance variable
+
+### Create NS/EW dominant walkway war
