@@ -86,6 +86,7 @@ count_particular_string <- function(dataframe, string) {
     
 }
 
+
 pattern_to_bool <- function(string, pattern) {
     # Returns NA if string is NA, 1 if pattern is found, 0 otherwise. 
     return(
@@ -94,4 +95,19 @@ pattern_to_bool <- function(string, pattern) {
             as.numeric(str_detect(string, pattern))
         )
     )
+}
+
+
+# This function makes what'd be a huge chunk of code way less repetitive.
+# Essentially what this does is check if the vector made up by the NSEW walkway columns
+# is in the orientation dominance list of vectors. 
+# I use mapply here which is the multivariate version of apply to use all 4 columns as variables.
+apply_comparison <- function(df, list_name, comparison_list) {
+    df %>%
+        mutate(
+            !!list_name := mapply(
+                function(n, s, e, w) list(c(n, s, e, w)) %in% comparison_list,
+                walkway_N, walkway_S, walkway_E, walkway_W
+            )
+        )
 }

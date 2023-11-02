@@ -487,6 +487,148 @@ Consider a new variable that is boolean.
 ### Try different link functions
 Don't worry about interpretation, but give them a try
 
-### Create distance variable
+# Create distance variable
+## Load in location data
+```{r}
+location_data <- read_xlsx("../data/oct_26/10_26_13_SSP.xlsx")
+# Remove the rows that aren't included in the model.
+location_data <- location_data[1:149,]
+```
 
-### Create NS/EW dominant walkway war
+## Calculate distance from ampitheater
+Here he use the `distGeo` library to give us the exact geo-distance in meters that each house is from the ampitheater. 
+
+We divide by 1000 at the end to convert to kilometers.
+
+```{r}
+library(geosphere)
+# These are the coordinates of the ampitheatre in pompeii
+ampitheater <- c(40.7512, 14.4952)
+location_data <-
+    location_data %>% 
+    mutate(
+        dist_from_ampi = mapply(
+            # Here we create an anonymous function to apply the distgeo function to each lat,long pair per row
+            function(x, y) distGeo(p1=c(x, y), p2=ampitheater) / 1000, lat, long
+        )
+    )
+
+location_data
+```
+
+```{r}
+# Confirm this works identical to Dyhr's solution
+# mylist <- rep(0, nrow(location_data))
+# for (index in 1:nrow(location_data)) {
+#     mylist[index] <- distGeo(
+#         c(location_data$lat[index], location_data$long[index]),
+#         ampitheater
+#     )
+# }
+# location_data$dist_from_ampi <- mylist
+# location_data
+```
+
+# Create NS/EW dominant walkway vars
+
+```{r}
+# My old convoluted means of checking if a vector is in a list of vectors, saved for posterity. 
+check <- c(1,2) 
+listofvec <- list(x, c(3,4))
+any(sapply(listofvec, function(x) identical(x, check)))
+```
+
+
+
+```{r}
+no_orient <- list(
+    c(1, 0, 1, 0),
+    c(0, 1, 0, 1),
+    c(0, 0, 0, 0),
+    c(1, 1, 1, 1),
+    c(1, 0, 0, 1),
+    c(0, 1, 1, 0)
+)
+ns_dom <- list(
+    c(1, 1, 0, 1),
+    c(0, 1, 0, 0),
+    c(1, 0, 0, 0),
+    c(1, 1, 1, 0),
+    c(1, 1, 0, 0)
+)
+ew_dom <- list(
+    c(0, 0, 1, 1),
+    c(1, 0, 1, 1),
+    c(0, 1, 1, 1),
+    c(0, 0, 0, 1),
+    c(0, 0, 1, 0)
+)    
+```
+
+```{r}
+# Some sanity checks
+list(c(1,0,1,0)) %in% no_orient
+list(c(1,0,1,0)) %in% ns_dom
+list(c(1,0,1,0)) %in% ew_dom
+```
+
+```{r}
+# This function makes what'd be a huge chunk of code way less repetitive.
+# Essentially what this does is check if the vector made up by the NSEW walkway columns
+# is in the orientation dominance list of vectors. 
+# I use mapply here which is the multivariate version of apply to use all 4 columns as variables.
+apply_comparison <- function(df, list_name, comparison_list) {
+    df %>%
+        mutate(
+            # !!list_name := any(
+            !!list_name :=mapply(
+                    function(n, s, e, w) list(c(n, s, e, w)) %in% comparison_list,
+                    walkway_N, walkway_S, walkway_E, walkway_W
+                )
+            #)
+        )
+}
+```
+
+
+```{r}
+# Test on this dataset real quick
+walkway_df <- readr::read_csv("../data/walkway_and_portico_directions.csv")
+```
+
+```{r}
+# any(sapply(listofvec, function(x) identical(x, check)))
+
+walkway_df %>%
+    rowwise() %>%
+    mutate(
+        no_orient = any(
+            mapply(
+                function(n, s, e, w) vec_in_list(c(n,s,e,w), no_orient), 
+                walkway_N, walkway_S, walkway_E, walkway_W
+            )
+        ),
+        ns_dom = any(
+            mapply(
+                function(n, s, e, w) vec_in_list(c(n,s,e,w), ns_dom), 
+                walkway_N, walkway_S, walkway_E, walkway_W
+            )
+        ),
+        ew_dom = any(
+            mapply(
+                function(n, s, e, w) vec_in_list(c(n,s,e,w), ew_dom), 
+                walkway_N, walkway_S, walkway_E, walkway_W
+            )
+        )
+    ) %>%
+    select(walkway_N, walkway_S, walkway_E, walkway_W, no_orient, ns_dom, ew_dom)
+```
+
+```{r}
+walkway_df %>%
+    apply_comparison("no_orient", no_orient) %>%
+    apply_comparison("ns_dom", ns_dom) %>%
+    apply_comparison("ew_dom", ew_dom) %>%
+    select(walkway_N, walkway_S, walkway_E, walkway_W, no_orient, ns_dom, ew_dom)
+```
+
