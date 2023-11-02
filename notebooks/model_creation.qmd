@@ -534,7 +534,7 @@ location_data
 ```{r}
 # My old convoluted means of checking if a vector is in a list of vectors, saved for posterity. 
 check <- c(1,2) 
-listofvec <- list(x, c(3,4))
+listofvec <- list(check, c(3,4))
 any(sapply(listofvec, function(x) identical(x, check)))
 ```
 
@@ -594,34 +594,6 @@ apply_comparison <- function(df, list_name, comparison_list) {
 ```{r}
 # Test on this dataset real quick
 walkway_df <- readr::read_csv("../data/walkway_and_portico_directions.csv")
-```
-
-```{r}
-# any(sapply(listofvec, function(x) identical(x, check)))
-
-walkway_df %>%
-    rowwise() %>%
-    mutate(
-        no_orient = any(
-            mapply(
-                function(n, s, e, w) vec_in_list(c(n,s,e,w), no_orient), 
-                walkway_N, walkway_S, walkway_E, walkway_W
-            )
-        ),
-        ns_dom = any(
-            mapply(
-                function(n, s, e, w) vec_in_list(c(n,s,e,w), ns_dom), 
-                walkway_N, walkway_S, walkway_E, walkway_W
-            )
-        ),
-        ew_dom = any(
-            mapply(
-                function(n, s, e, w) vec_in_list(c(n,s,e,w), ew_dom), 
-                walkway_N, walkway_S, walkway_E, walkway_W
-            )
-        )
-    ) %>%
-    select(walkway_N, walkway_S, walkway_E, walkway_W, no_orient, ns_dom, ew_dom)
 ```
 
 ```{r}
