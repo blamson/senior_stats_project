@@ -17,7 +17,7 @@ fix_variable_names <- function(dataframe) {
 
 create_unique_id <- function(dataframe) {
     dataframe <- 
-        unite(df, col='id', c('number', 'name'), sep='_') %>%
+        unite(dataframe, col='id', c('number', 'name'), sep='_') %>%
         group_by(id) %>%
         mutate(row_number = row_number()) %>%
         ungroup() %>%

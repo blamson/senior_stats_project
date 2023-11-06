@@ -511,9 +511,12 @@ location_data <-
             # Here we create an anonymous function to apply the distgeo function to each lat,long pair per row
             function(x, y) distGeo(p1=c(x, y), p2=ampitheater) / 1000, lat, long
         )
-    )
+    ) %>%
+    rename(number = hid) #%>%
+    # create_unique_id()
 
-location_data
+# create_unique_id(location_data)
+# location_data %>% create_unique_id()
 ```
 
 ```{r}
@@ -580,12 +583,10 @@ list(c(1,0,1,0)) %in% ew_dom
 apply_comparison <- function(df, list_name, comparison_list) {
     df %>%
         mutate(
-            # !!list_name := any(
-            !!list_name :=mapply(
-                    function(n, s, e, w) list(c(n, s, e, w)) %in% comparison_list,
-                    walkway_N, walkway_S, walkway_E, walkway_W
-                )
-            #)
+            !!list_name := mapply(
+                function(n, s, e, w) as.integer(list(c(n, s, e, w)) %in% comparison_list),
+                walkway_N, walkway_S, walkway_E, walkway_W
+            )
         )
 }
 ```
@@ -597,10 +598,21 @@ walkway_df <- readr::read_csv("../data/walkway_and_portico_directions.csv")
 ```
 
 ```{r}
-walkway_df %>%
+walkway_df <- 
+    walkway_df %>%
     apply_comparison("no_orient", no_orient) %>%
     apply_comparison("ns_dom", ns_dom) %>%
-    apply_comparison("ew_dom", ew_dom) %>%
+    apply_comparison("ew_dom", ew_dom) 
+
+walkway_df %>%
     select(walkway_N, walkway_S, walkway_E, walkway_W, no_orient, ns_dom, ew_dom)
+```
+
+```{r}
+df_model <- left_join(df_model, walkway_df, by="id")
+```
+
+```{r}
+df_model$id
 ```
 
