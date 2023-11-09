@@ -22,7 +22,7 @@ library(skimr)
 # Import Data
 
 ```{r}
-load_preprocessed <- TRUE
+load_preprocessed <- FALSE
 
 data_date <- "data/sep_13"
 
@@ -32,20 +32,11 @@ if (load_preprocessed) {
     df <- readr::read_csv(full_path)
 } else {
     data_path <- "Pompeii data 2023 for stats .xlsx"
-    full_path <- paste0(data_date, "/", data_path) 
+    full_path <- paste0("../", data_date, "/", data_path) 
     df <- readxl::read_excel(full_path, sheet="all peristyles")
     df <- fix_variable_names(df)
-    df <- create_unique_id(df)
+    # df <- create_unique_id(df)
 }
-
-sides <- 
-    df %>%
-    select(c(id, walkway_N, walkway_S, walkway_E, walkway_W)) %>%
-    # Remove all rows where all 4 columns are NA
-    filter(rowSums(!is.na(.)) > 1) %>%
-    # Replace all remaining NAs with 0
-    replace(is.na(.), 0) %>%
-    mutate(walkway_count = rowSums(across(where(is.numeric))))
 
 df
 ```
@@ -222,7 +213,7 @@ df$alignment_with_atrium %>% unique()
 ## Orientation of Large Room
 
 ```{r}
-df %>% select(c(largest_room_direction...77, largest_room_direction...123))
+df %>% select(c(largest_room_direction...78, largest_room_direction...124))
 ```
 
 I believe 123 is the one we want to keep here.
@@ -230,7 +221,7 @@ I believe 123 is the one we want to keep here.
 ```{r}
 df <- 
     df %>%
-    mutate(largest_room_dir = largest_room_direction...123) %>%
+    mutate(largest_room_dir = largest_room_direction...124) %>%
     mutate(
         large_room_dir_N = pattern_to_bool(string=largest_room_dir, pattern="N"),
         large_room_dir_S = pattern_to_bool(string=largest_room_dir, pattern="S"),
@@ -248,6 +239,10 @@ df %>%
 ## Combine everything into one smaller dataset
 
 ```{r}
+if (!("id" %in% colnames(df))) {
+    df <- create_unique_id(df)
+}
+
 large_room_dir_vars <- c(
     "large_room_dir_N", "large_room_dir_S", "large_room_dir_E", "large_room_dir_W"
 )
@@ -266,7 +261,11 @@ misc <- c("id", "visible_from_entrance", "stone_used_in_column", "peristyle_size
 
 messing_around <- c("order", "corin", "log_peri_size")
 
-model_vars = c(misc, messing_around, large_room_dir_vars, per_dir_from_entr_vars, widest_walkway_dir_vars)
+og_names = c("number", "name")
+
+model_vars = c(
+    og_names, misc, messing_around, large_room_dir_vars, per_dir_from_entr_vars, widest_walkway_dir_vars
+)
 
 df_model <- df %>%
     # Messing around ---
@@ -277,10 +276,11 @@ df_model <- df %>%
         corin = pattern_to_bool(order, "(Corinthian|corinth)"),
         log_peri_size = I(log(peristyle_size))
     ) %>%
-    filter(!is.na(corin)) %>%
+    # filter(!is.na(corin)) %>%
     # End messing around ---
     select(model_vars)
 
+readr::write_csv(df_model, "../data/df_model_initial.csv")
 df_model
 ```
 ## Exploration
@@ -313,149 +313,6 @@ df_model %>% filter(!is.na(widest_walkway_N) & !is.na(per_dir_from_entr_N))
 
 Only 40 rows where BOTH of these sets of predictors aren't NA. 
 
-# Modeling
-
-```{r}
-model <- glm(
-    visible_from_entrance ~ log_peri_size + corin + stone_used_in_column, 
-    family=binomial(link="logit"),
-    data=df_model
-)
-
-summary(model)
-```
-
-```{r}
-model
-```
-
-
-```{r}
-skim(df_model)
-```
-
-```{r}
-df_model %>% select(id, visible_from_entrance, order, corin) %>% dplyr::arrange(corin)
-```
-
-```{r}
-df
-```
-
-## Log peristyle size as response
-
-```{r}
-model <- lm(
-    log_peri_size ~ visible_from_entrance + corin + stone_used_in_column, 
-    data=df_model
-)
-
-summary(model)
-anova(model)
-```
-
-```{r}
-aov(log_peri_size ~ visible_from_entrance + corin + stone_used_in_column, data = df_model) %>% summary()
-```
-
-
-## Correlation of widest walkways
-
-```{r}
-df_model %>%
-    select(c(widest_walkway_E, widest_walkway_N, widest_walkway_S, widest_walkway_W)) %>%
-    cor(use='complete.obs')
-```
-
-## Correlation of Peristyle direction from entrance
-
-```{r}
-df_model %>%
-    select(
-        c(
-            c(per_dir_from_entr_N, per_dir_from_entr_S, per_dir_from_entr_E, per_dir_from_entr_W),
-            c(widest_walkway_N, widest_walkway_S, widest_walkway_E, widest_walkway_W)
-        )
-    ) %>%
-    cor(use='complete.obs')
-```
-
-
-## Using widest walkways in model
-
-We don't want to use all 4 so I'll use a for loop to examine which (if any) performs well.
-
-```{r}
-
-for (widest_walkway_dir in widest_walkway_dir_vars) {
-    model <- glm(
-        visible_from_entrance ~ log_peri_size + corin + stone_used_in_column, 
-        family=binomial(link="logit"),
-        data=df_model
-    )
-    
-    writeLines("\n\n")
-    print(glue("--- [Model using {widest_walkway_dir}] ---"))
-    
-    print(summary(model))
-    
-    print(anova(model))
-}
-```
-
-Seems walkway direction destroys the degrees of freedom and the model entirely. 
-
-
-```{r}
-for (widest_walkway_dir in widest_walkway_dir_vars) {
-    model <- lm(
-        log_peri_size ~ visible_from_entrance + corin + stone_used_in_column + eval(parse(text=widest_walkway_dir)), 
-        data=df_model
-    )
-    
-    writeLines("\n\n")
-    print(glue("\n\n--- [Model using {widest_walkway_dir}] ---"))
-    
-    print(summary(model))
-    
-    print(anova(model))
-}
-```
-
-
-## Using peristyle direction from entrance
-
-```{r}
-for (per_dir in per_dir_from_entr_vars) {
-    model <- glm(
-        visible_from_entrance ~ log_peri_size + corin + stone_used_in_column + eval(parse(text=per_dir)), 
-        family=binomial(link="logit"),
-        data=df_model
-    )
-    
-    writeLines("\n\n")
-    print(glue("\n\n--- [Model using {per_dir}] ---"))
-    
-    print(summary(model))
-}
-```
-
-```{r}
-for (per_dir in per_dir_from_entr_vars) {
-    model <- lm(
-        log_peri_size ~ visible_from_entrance + corin + stone_used_in_column + eval(parse(text=per_dir)), 
-        data=df_model
-    )
-    
-    writeLines("\n\n")
-    print(glue("--- [Model using {per_dir}] ---"))
-    
-    print(summary(model))
-    
-    print(anova(model))
-}
-```
-
 
 # Next steps
 - Investigate discrepency between my and study dataset
@@ -464,10 +321,6 @@ for (per_dir in per_dir_from_entr_vars) {
 - change "not visible" w/ no directions to NA
 - google AIC
 
-## Investigating ---
-```{r}
-df %>% head()
-```
 
 ## Next Steps Oct 26
 
@@ -575,22 +428,6 @@ list(c(1,0,1,0)) %in% ns_dom
 list(c(1,0,1,0)) %in% ew_dom
 ```
 
-```{r}
-# This function makes what'd be a huge chunk of code way less repetitive.
-# Essentially what this does is check if the vector made up by the NSEW walkway columns
-# is in the orientation dominance list of vectors. 
-# I use mapply here which is the multivariate version of apply to use all 4 columns as variables.
-apply_comparison <- function(df, list_name, comparison_list) {
-    df %>%
-        mutate(
-            !!list_name := mapply(
-                function(n, s, e, w) as.integer(list(c(n, s, e, w)) %in% comparison_list),
-                walkway_N, walkway_S, walkway_E, walkway_W
-            )
-        )
-}
-```
-
 
 ```{r}
 # Test on this dataset real quick
@@ -608,11 +445,79 @@ walkway_df %>%
     select(walkway_N, walkway_S, walkway_E, walkway_W, no_orient, ns_dom, ew_dom)
 ```
 
+# Combining Location Data w/ df_model
+
 ```{r}
-df_model <- left_join(df_model, walkway_df, by="id")
+temp <- df_model %>% select(c(og_names, misc, "order", "corin", "log_peri_size"))
+df_model <- left_join(temp, walkway_df, by="id")
 ```
 
 ```{r}
-df_model$id
+df_model
+```
+
+
+```{r}
+# readr::write_csv(location_data, "../data/dyhr_location_data.csv")
+```
+
+
+```{r}
+# walkway_df_cleaned <- walkway_df %>%
+#     mutate(new_id = str_replace(id, "_", " ")) %>%
+#     mutate(new_id = str_replace(new_id, "zIX", "IX")) %>%
+#     mutate(new_id = str_remove(new_id, pattern=" house$"))
+# 
+# walkway_df_cleaned %>% select(id, new_id)
+```
+
+```{r}
+# incomplete_df <- 
+#     location_data %>%
+#     mutate(new_id = str_remove_all(name, pattern = "[\\(\\)]")) %>%
+#     mutate(new_id = str_remove(new_id, pattern = " [0-9]*$")) %>%
+#     mutate(new_id = str_remove(new_id, pattern=" house$")) %>%
+#     # select(name, new_id)
+#     left_join(., walkway_df_cleaned, by="new_id")
+
+# incomplete_df %>% readr::write_csv(file="../data/incomplete_model.csv")
+```
+
+## SOLVING THE NAMING DIFFERENCE MYSTERY
+
+```{r}
+location_data <- 
+    location_data %>% 
+    mutate(number = stringr::str_extract(name, pattern="^[\\w\\.]+"))
+
+df <- df %>%
+    mutate(number = str_replace(number, "zIX", "IX"))
+```
+
+```{r}
+rows_in_location_df <- df %>% filter(number %in% location_data$number)
+missing_rows <- location_data %>% filter(!(number %in% rows_in_location_df$number)) %>% arrange(number)
+missing_rows
+```
+
+```{r}
+df
+```
+
+```{r}
+missing_numbers <- c(
+    "I.04.05/25", "I.06.08/9", "VI.02.22/15", "VI.07.20/21", "VI.08.23/24",
+    "VI.09.03/5", "VI.09.06/7", "VI.16.26/27", "VII.01.25/47", "VII.03.11/12",
+    "VII.07.23/17", "IX.01.22/29", "IX.05.14/16"
+)
+
+final_model <- 
+    df_model %>% filter(
+    (number %in% missing_numbers) | (number %in% location_data$number)
+)
+```
+
+```{r}
+readr::write_csv(final_model, "../data/df_model.csv")
 ```
 

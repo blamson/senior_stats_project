@@ -17,7 +17,7 @@ fix_variable_names <- function(dataframe) {
 
 create_unique_id <- function(dataframe) {
     dataframe <- 
-        unite(dataframe, col='id', c('number', 'name'), sep='_') %>%
+        unite(dataframe, col='id', c('number', 'name'), sep='_', remove=FALSE) %>%
         group_by(id) %>%
         mutate(row_number = row_number()) %>%
         ungroup() %>%
@@ -106,7 +106,7 @@ apply_comparison <- function(df, list_name, comparison_list) {
     df %>%
         mutate(
             !!list_name := mapply(
-                function(n, s, e, w) list(c(n, s, e, w)) %in% comparison_list,
+                function(n, s, e, w) as.integer(list(c(n, s, e, w)) %in% comparison_list),
                 walkway_N, walkway_S, walkway_E, walkway_W
             )
         )

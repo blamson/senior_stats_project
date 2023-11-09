@@ -1,0 +1,184 @@
+---
+title: "Modeling"
+author: "Brady Lamson"
+format: pdf
+---
+
+# Import Packages
+
+```{r}
+library(stringr)
+library(dplyr)
+library(skimr)
+library(readxl)
+library(glue)
+library(ggplot2)
+library(tidyr)
+library(readr)
+source('../helpers.R')
+library(skimr)
+```
+
+```{r}
+df_model <- readr::read_csv(file = "../data/df_model_initial.csv")
+df_model
+```
+
+# Variables
+
+```{r}
+large_room_dir_vars <- c(
+    "large_room_dir_N", "large_room_dir_S", "large_room_dir_E", "large_room_dir_W"
+)
+
+per_dir_from_entr_vars <- c(
+    "per_dir_from_entr_N", "per_dir_from_entr_S", "per_dir_from_entr_E", "per_dir_from_entr_W",
+    "per_dir_from_entr_NS", "per_dir_from_entr_EW"
+)
+
+widest_walkway_dir_vars <- c(
+    "widest_walkway_N", "widest_walkway_S", "widest_walkway_E", "widest_walkway_W",
+    "widest_walkway_NS", "widest_walkway_EW"
+)
+```
+
+
+# Modeling
+
+```{r}
+model <- glm(
+    visible_from_entrance ~ log_peri_size + corin + stone_used_in_column, 
+    family=binomial(link="logit"),
+    data=df_model
+)
+
+summary(model)
+```
+
+```{r}
+model
+```
+
+
+```{r}
+skim(df_model)
+```
+
+```{r}
+df_model %>% select(id, visible_from_entrance, order, corin) %>% dplyr::arrange(corin)
+```
+
+
+## Log peristyle size as response
+
+```{r}
+model <- lm(
+    log_peri_size ~ visible_from_entrance + corin + stone_used_in_column, 
+    data=df_model
+)
+
+summary(model)
+anova(model)
+```
+
+```{r}
+aov(log_peri_size ~ visible_from_entrance + corin + stone_used_in_column, data = df_model) %>% summary()
+```
+
+
+## Correlation of widest walkways
+
+```{r}
+df_model %>%
+    select(c(widest_walkway_E, widest_walkway_N, widest_walkway_S, widest_walkway_W)) %>%
+    cor(use='complete.obs')
+```
+
+## Correlation of Peristyle direction from entrance
+
+```{r}
+df_model %>%
+    select(
+        c(
+            c(per_dir_from_entr_N, per_dir_from_entr_S, per_dir_from_entr_E, per_dir_from_entr_W),
+            c(widest_walkway_N, widest_walkway_S, widest_walkway_E, widest_walkway_W)
+        )
+    ) %>%
+    cor(use='complete.obs')
+```
+
+
+## Using widest walkways in model
+
+We don't want to use all 4 so I'll use a for loop to examine which (if any) performs well.
+
+```{r}
+
+for (widest_walkway_dir in widest_walkway_dir_vars) {
+    model <- glm(
+        visible_from_entrance ~ log_peri_size + corin + stone_used_in_column, 
+        family=binomial(link="logit"),
+        data=df_model
+    )
+    
+    writeLines("\n\n")
+    print(glue("--- [Model using {widest_walkway_dir}] ---"))
+    
+    print(summary(model))
+    
+    print(anova(model))
+}
+```
+
+Seems walkway direction destroys the degrees of freedom and the model entirely. 
+
+
+```{r}
+for (widest_walkway_dir in widest_walkway_dir_vars) {
+    model <- lm(
+        log_peri_size ~ visible_from_entrance + corin + stone_used_in_column + eval(parse(text=widest_walkway_dir)), 
+        data=df_model
+    )
+    
+    writeLines("\n\n")
+    print(glue("\n\n--- [Model using {widest_walkway_dir}] ---"))
+    
+    print(summary(model))
+    
+    print(anova(model))
+}
+```
+
+
+## Using peristyle direction from entrance
+
+```{r}
+for (per_dir in per_dir_from_entr_vars) {
+    model <- glm(
+        visible_from_entrance ~ log_peri_size + corin + stone_used_in_column + eval(parse(text=per_dir)), 
+        family=binomial(link="logit"),
+        data=df_model
+    )
+    
+    writeLines("\n\n")
+    print(glue("\n\n--- [Model using {per_dir}] ---"))
+    
+    print(summary(model))
+}
+```
+
+```{r}
+for (per_dir in per_dir_from_entr_vars) {
+    model <- lm(
+        log_peri_size ~ visible_from_entrance + corin + stone_used_in_column + eval(parse(text=per_dir)), 
+        data=df_model
+    )
+    
+    writeLines("\n\n")
+    print(glue("--- [Model using {per_dir}] ---"))
+    
+    print(summary(model))
+    
+    print(anova(model))
+}
+```
