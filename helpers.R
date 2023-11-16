@@ -106,8 +106,19 @@ apply_comparison <- function(df, list_name, comparison_list) {
     df %>%
         mutate(
             !!list_name := mapply(
-                function(n, s, e, w) as.integer(list(c(n, s, e, w)) %in% comparison_list),
+                function(n, s, e, w) {
+                    if (any(is.na(c(n, s, e, w)))) {
+                        NA
+                    } else if (list(c(n, s, e, w)) %in% comparison_list) {
+                        1
+                    } else {
+                        0
+                    }
+                },
                 walkway_N, walkway_S, walkway_E, walkway_W
             )
         )
 }
+
+
+
